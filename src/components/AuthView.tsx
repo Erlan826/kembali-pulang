@@ -1,25 +1,48 @@
 import React, { useState } from 'react';
+import { UserProfile } from '../data/mockData';
 
 interface AuthViewProps {
   onNavigate: (view: string) => void;
+  userProfile: UserProfile;
+  onUpdateProfile: (profile: UserProfile) => void;
   onLoginSuccess: (role: 'mahasiswa' | 'koordinator' | 'admin') => void;
 }
 
 export const AuthView: React.FC<AuthViewProps> = ({
   onNavigate,
+  userProfile,
+  onUpdateProfile,
   onLoginSuccess,
 }) => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [role, setRole] = useState<'mahasiswa' | 'koordinator' | 'admin'>('mahasiswa');
-  const [identifier, setIdentifier] = useState('13521098');
+  const [identifier, setIdentifier] = useState(userProfile.nim || '13521098');
   const [password, setPassword] = useState('••••••••••••');
   const [showPassword, setShowPassword] = useState(false);
   const [alertMsg, setAlertMsg] = useState('');
 
+  // Controlled Register fields
+  const [regName, setRegName] = useState('');
+  const [regNim, setRegNim] = useState('');
+  const [regUnit, setRegUnit] = useState('STEI-K');
+  const [regWhatsapp, setRegWhatsapp] = useState('');
+
+  const navigateByRole = (targetRole: 'mahasiswa' | 'koordinator' | 'admin') => {
+    onLoginSuccess(targetRole);
+    if (targetRole === 'mahasiswa') {
+      onNavigate('catalog');
+    } else if (targetRole === 'koordinator') {
+      onNavigate('coordinator');
+    } else {
+      onNavigate('admin');
+    }
+  };
+
   const handleRoleChange = (newRole: 'mahasiswa' | 'koordinator' | 'admin') => {
     setRole(newRole);
+    setAlertMsg('');
     if (newRole === 'mahasiswa') {
-      setIdentifier('13521098');
+      setIdentifier(userProfile.nim || '13521098');
     } else if (newRole === 'koordinator') {
       setIdentifier('POSKO-K3L-042');
     } else {
@@ -29,29 +52,47 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (role === 'mahasiswa' && identifier.trim() && identifier.trim() !== userProfile.nim) {
+      const cleanId = identifier.trim();
+      onUpdateProfile({
+        ...userProfile,
+        nim: cleanId,
+        email: cleanId.includes('@') ? cleanId : `${cleanId}@std.stei.ac.id`,
+      });
+    }
     setAlertMsg(`Memvalidasi kredensial SSO ${role.toUpperCase()}...`);
     setTimeout(() => {
-      onLoginSuccess(role);
-      if (role === 'mahasiswa') {
-        onNavigate('catalog');
-      } else if (role === 'koordinator') {
-        onNavigate('coordinator');
-      } else {
-        onNavigate('admin');
-      }
-    }, 1000);
+      navigateByRole(role);
+    }, 600);
   };
 
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setAlertMsg('Permohonan aktivasi akun civitas dikirim ke Biro Kemahasiswaan & K3L. Verifikasi maks 1x24 jam.');
+    if (!regNim.trim() || !regWhatsapp.trim()) return;
+    const cleanNim = regNim.trim();
+    const displayName = regName.trim() || `Mahasiswa ${cleanNim}`;
+    onUpdateProfile({
+      ...userProfile,
+      name: displayName,
+      nim: cleanNim,
+      faculty: regUnit,
+      program: `Program Studi ${regUnit}`,
+      email: `${cleanNim}@std.${regUnit.toLowerCase().replace(/[^a-z]/g, '')}.ac.id`,
+      phone: regWhatsapp.trim(),
+    });
+    setAlertMsg(
+      `Akun civitas ${displayName} (${cleanNim}) berhasil diaktivasi! Mengalihkan ke portal...`
+    );
+    setTimeout(() => {
+      navigateByRole('mahasiswa');
+    }, 1000);
   };
 
   return (
     <div className="w-full min-h-[calc(100vh-80px)] py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-          {/* Left Column: Institutional Credibility & Value Proposition */}
+          {/* Left Column */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             <div className="inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-full bg-[#e2e7ff] text-[#131b2e] shadow-xs text-[12px] font-bold border border-[#dae2fd]">
               <span className="w-2 h-2 rounded-full bg-[#00a472] animate-pulse"></span>
@@ -63,14 +104,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
             <div className="flex flex-col gap-3">
               <h1 className="text-3xl sm:text-4xl font-extrabold text-[#091426] tracking-tight leading-tight">
-                Satu Akun SSO untuk Melindungi & Menemukan Aset Berharga Kampus
+                Satu Akun SSO untuk Melindungi &amp; Menemukan Aset Berharga Kampus
               </h1>
               <p className="text-[15px] text-[#45474c] leading-relaxed">
-                Akses resmi portal kehilangan dan penemuan barang terintegrasi Direktorat Kemahasiswaan & Tim Keamanan K3L Kampus. Menjamin rantai penanganan terverifikasi, perlindungan privasi ciri rahasia, serta rekonsiliasi berbasis berita acara resmi (BAST).
+                Akses resmi portal kehilangan dan penemuan barang terintegrasi Direktorat Kemahasiswaan &amp; Tim Keamanan K3L Kampus. Menjamin rantai penanganan terverifikasi, perlindungan privasi ciri rahasia, serta rekonsiliasi berbasis berita acara resmi (BAST).
               </p>
             </div>
 
-            {/* Key Pillars Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <div className="flex flex-col p-4 rounded-2xl bg-white shadow-sm border border-[#eaedff] gap-2">
                 <div className="w-10 h-10 rounded-xl bg-[#091426] text-white flex items-center justify-center">
@@ -96,14 +136,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 <div className="w-10 h-10 rounded-xl bg-[#e2e7ff] text-[#091426] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[20px]">inventory_2</span>
                 </div>
-                <h2 className="text-[14px] font-bold text-[#091426]">6 Posko Fisik & BAST</h2>
+                <h2 className="text-[14px] font-bold text-[#091426]">6 Posko Fisik &amp; BAST</h2>
                 <p className="text-[12px] text-[#45474c] leading-relaxed">
                   Serah terima aset di posko loker satpam terlindungi CCTV dengan Berita Acara Serah Terima digital ber-QR.
                 </p>
               </div>
             </div>
 
-            {/* Stats Strip */}
             <div className="p-5 rounded-2xl bg-[#f2f3ff] border border-[#eaedff] flex flex-wrap items-center justify-between gap-6 shadow-sm">
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1">
@@ -140,11 +179,13 @@ export const AuthView: React.FC<AuthViewProps> = ({
           {/* Right Column: Authentication Card */}
           <div className="lg:col-span-5 w-full">
             <div className="w-full bg-white rounded-3xl shadow-xl border border-[#eaedff] p-6 sm:p-8 flex flex-col gap-6">
-              {/* Tabs */}
               <div className="w-full p-1 bg-[#eaedff] rounded-xl flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setAuthMode('login')}
+                  onClick={() => {
+                    setAuthMode('login');
+                    setAlertMsg('');
+                  }}
                   className={`flex-1 py-2 px-3 rounded-lg text-[13px] font-bold text-center transition-all cursor-pointer ${
                     authMode === 'login'
                       ? 'bg-white text-[#091426] shadow-sm'
@@ -155,7 +196,10 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAuthMode('register')}
+                  onClick={() => {
+                    setAuthMode('register');
+                    setAlertMsg('');
+                  }}
                   className={`flex-1 py-2 px-3 rounded-lg text-[13px] font-bold text-center transition-all cursor-pointer ${
                     authMode === 'register'
                       ? 'bg-white text-[#091426] shadow-sm'
@@ -166,7 +210,6 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 </button>
               </div>
 
-              {/* Role Selector */}
               <div className="flex flex-col gap-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-[#45474c]">
                   Pilih Peran Pengguna
@@ -213,7 +256,6 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 </div>
               </div>
 
-              {/* LOGIN FORM */}
               {authMode === 'login' ? (
                 <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
                   <div className="flex flex-col gap-1.5">
@@ -248,7 +290,11 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       <label className="text-[13px] font-bold text-[#131b2e]">Kata Sandi SSO</label>
                       <button
                         type="button"
-                        onClick={() => alert('Permintaan reset sandi dialihkan ke DSTI kampus.')}
+                        onClick={() =>
+                          setAlertMsg(
+                            `Tautan pemulihan kata sandi SSO telah dikirimkan ke email resmi untuk ID "${identifier}".`
+                          )
+                        }
                         className="text-[11px] text-[#1d4ed8] hover:underline font-semibold cursor-pointer"
                       >
                         Lupa kata sandi?
@@ -280,7 +326,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   <label className="flex items-start gap-2.5 cursor-pointer py-0.5 select-none">
                     <input defaultChecked className="mt-0.5 rounded text-[#1d4ed8]" type="checkbox" />
                     <span className="text-[12px] text-[#45474c]">
-                      Ingat perangkat ini di jaringan resmi Eduroam & Ruang Posko (30 Hari)
+                      Ingat perangkat ini di jaringan resmi Eduroam &amp; Ruang Posko (30 Hari)
                     </span>
                   </label>
 
@@ -301,10 +347,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => {
-                      onLoginSuccess(role);
-                      onNavigate('catalog');
-                    }}
+                    onClick={() => navigateByRole(role)}
                     className="w-full py-2.5 px-4 rounded-xl bg-[#f2f3ff] hover:bg-[#eaedff] text-[#131b2e] font-semibold text-[13px] flex items-center justify-center gap-2.5 transition-colors cursor-pointer border border-[#eaedff]"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -319,7 +362,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   <div className="text-center pt-1">
                     <button
                       type="button"
-                      onClick={() => onNavigate('catalog')}
+                      onClick={() => navigateByRole('mahasiswa')}
                       className="text-[13px] font-bold text-[#1d4ed8] hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
                       <span className="material-symbols-outlined text-[18px]">search</span>
@@ -328,11 +371,23 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   </div>
                 </form>
               ) : (
-                /* REGISTER FORM */
                 <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-4">
                   <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] text-[12px] text-[#131b2e] flex items-center gap-2">
                     <span className="material-symbols-outlined text-[#1d4ed8]">how_to_reg</span>
-                    <span>Aktivasi akun khusus civitas akademika baru dan penugasan posko K3L.</span>
+                    <span>Aktivasi akun civitas akademika baru dan sinkronisasi instan ke profil SSO.</span>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-bold text-[#131b2e]">
+                      Nama Lengkap Sesuai KTM / KTP
+                    </label>
+                    <input
+                      className="w-full px-4 py-2.5 bg-[#f2f3ff] rounded-xl text-[13px] text-[#131b2e] border border-[#eaedff]"
+                      placeholder="Misal: Siti Nurhaliza"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      required
+                    />
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -341,7 +396,9 @@ export const AuthView: React.FC<AuthViewProps> = ({
                     </label>
                     <input
                       className="w-full px-4 py-2.5 bg-[#f2f3ff] rounded-xl text-[13px] text-[#131b2e] border border-[#eaedff]"
-                      placeholder="Misal: 198402122010121002"
+                      placeholder="Misal: 13522044"
+                      value={regNim}
+                      onChange={(e) => setRegNim(e.target.value)}
                       required
                     />
                   </div>
@@ -349,11 +406,15 @@ export const AuthView: React.FC<AuthViewProps> = ({
                   <div className="grid grid-cols-2 gap-3">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[13px] font-bold text-[#131b2e]">Satuan Kerja</label>
-                      <select className="w-full px-3 py-2.5 bg-[#f2f3ff] rounded-xl text-[13px] text-[#131b2e] border border-[#eaedff]">
-                        <option value="STEI">STEI-K</option>
+                      <select
+                        value={regUnit}
+                        onChange={(e) => setRegUnit(e.target.value)}
+                        className="w-full px-3 py-2.5 bg-[#f2f3ff] rounded-xl text-[13px] text-[#131b2e] border border-[#eaedff]"
+                      >
+                        <option value="STEI-K">STEI-K</option>
                         <option value="SBM">SBM</option>
                         <option value="FSRD">FSRD</option>
-                        <option value="K3L">Direktorat K3L</option>
+                        <option value="Direktorat K3L">Direktorat K3L</option>
                       </select>
                     </div>
 
@@ -362,6 +423,8 @@ export const AuthView: React.FC<AuthViewProps> = ({
                       <input
                         className="w-full px-3 py-2.5 bg-[#f2f3ff] rounded-xl text-[13px] text-[#131b2e] border border-[#eaedff]"
                         placeholder="0812-XXXX-XXXX"
+                        value={regWhatsapp}
+                        onChange={(e) => setRegWhatsapp(e.target.value)}
                         required
                       />
                     </div>
@@ -371,7 +434,7 @@ export const AuthView: React.FC<AuthViewProps> = ({
                     type="submit"
                     className="w-full py-3 rounded-xl bg-[#1d4ed8] text-white font-bold text-[14px] shadow-sm hover:bg-[#1d4ed8]/90 transition-all cursor-pointer"
                   >
-                    Kirim Permohonan Aktivasi Akun
+                    Aktifkan Akun &amp; Masuk Portal
                   </button>
                 </form>
               )}
@@ -383,7 +446,6 @@ export const AuthView: React.FC<AuthViewProps> = ({
                 </div>
               )}
 
-              {/* Bottom Card Security Banner */}
               <div className="pt-3 border-t border-[#eaedff] flex items-center justify-between text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
                 <div className="flex items-center gap-1">
                   <span className="material-symbols-outlined text-[15px] text-[#00a472]">verified</span>

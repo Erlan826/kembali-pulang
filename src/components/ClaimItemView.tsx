@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FoundItem } from '../data/mockData';
+import { FoundItem, UserProfile } from '../data/mockData';
 
 interface ClaimItemViewProps {
   item: FoundItem;
+  userProfile: UserProfile;
   onNavigate: (view: string) => void;
   onSubmitClaim: (claimData: {
     itemId: string;
@@ -10,64 +11,95 @@ interface ClaimItemViewProps {
     pickupMethod: 'direct' | 'proxy';
     phone: string;
     isSecondHand: boolean;
+    evidenceFiles: string[];
+    claimId: string;
   }) => void;
+}
+
+interface AttachedFile {
+  name: string;
+  size: string;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${Math.round(kb)} KB`;
+  return `${(kb / 1024).toFixed(1)} MB`;
 }
 
 export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
   item,
+  userProfile,
   onNavigate,
   onSubmitClaim,
 }) => {
   const [secretClue, setSecretClue] = useState('');
   const [pickupMethod, setPickupMethod] = useState<'direct' | 'proxy'>('direct');
-  const [phone, setPhone] = useState('+62 812-9876-5432');
+  const [phone, setPhone] = useState(userProfile.phone);
   const [isSecondHand, setIsSecondHand] = useState(false);
   const [integrityPact, setIntegrityPact] = useState(false);
-  const [files, setFiles] = useState<string[]>([
-    'Screenshot_AppleID_iCloud.png',
-    'Nota_Pembelian_iBox_2023.pdf',
-  ]);
-  const [showNotification, setShowNotification] = useState(false);
+  const [files, setFiles] = useState<AttachedFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [submittedClaimId, setSubmittedClaimId] = useState<string | null>(null);
+
+  const appendFiles = (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0) return;
+    setFormError(null);
+    const added: AttachedFile[] = Array.from(fileList).map((f) => ({
+      name: f.name,
+      size: formatBytes(f.size),
+    }));
+    setFiles((prev) => {
+      const existingNames = new Set(prev.map((p) => p.name));
+      return [...prev, ...added.filter((a) => !existingNames.has(a.name))];
+    });
+  };
+
+  const removeFile = (fileName: string) => {
+    setFiles((prev) => prev.filter((f) => f.name !== fileName));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (secretClue.trim().length < 15) {
-      alert(
+      setFormError(
         'Mohon deskripsikan ciri rahasia barang secara lebih rinci (minimal 15 karakter) demi validitas verifikasi K3L.'
       );
       return;
     }
+    if (!isSecondHand && files.length === 0) {
+      setFormError(
+        'Unggah minimal 1 berkas bukti kepemilikan, atau centang opsi "Barang dibeli bekas / Tidak memiliki struk resmi" jika tidak membawa nota.'
+      );
+      return;
+    }
     if (!integrityPact) {
-      alert(
-        'Anda harus mencentang persetujuan Pakta Integritas Mahasiswa sebelum melanjutkan.'
+      setFormError(
+        'Anda harus mencentang persetujuan Pakta Integritas Mahasiswa sebelum mengirimkan pengajuan klaim.'
       );
       return;
     }
 
+    setFormError(null);
+    const generatedClaimId = `CLM-${Math.floor(1000 + Math.random() * 9000)}`;
+    setSubmittedClaimId(generatedClaimId);
+
     onSubmitClaim({
       itemId: item.id,
-      secretClue,
+      secretClue: secretClue.trim(),
       pickupMethod,
-      phone,
+      phone: phone.trim() || userProfile.phone,
       isSecondHand,
+      evidenceFiles: files.map((f) => f.name),
+      claimId: generatedClaimId,
     });
 
-    setShowNotification(true);
     setTimeout(() => {
-      setShowNotification(false);
+      setSubmittedClaimId(null);
       onNavigate('activity');
-    }, 2500);
-  };
-
-  const handleAddFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files).map((f) => f.name);
-      setFiles((prev) => [...prev, ...newFiles]);
-    }
-  };
-
-  const removeFile = (fileName: string) => {
-    setFiles((prev) => prev.filter((f) => f !== fileName));
+    }, 2000);
   };
 
   return (
@@ -100,7 +132,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#dce1ff] text-[#001551] text-[11px] font-bold uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-[#1d4ed8]"></span>
-            Diverifikasi (Siap Diklaim)
+            {item.statusLabel}
           </span>
           <span className="font-mono text-[12px] text-[#45474c] px-2.5 py-1 rounded bg-[#eaedff]">
             Protokol K3L V-4.2
@@ -182,7 +214,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                 info
               </span>
               <p className="text-[12px] leading-relaxed text-[#131b2e]">
-                Klaim palsu dikenakan sanksi tata tertib kampus <strong>Pasal 28</strong> & pembekuan akun SSO universitas selama 1 semester.
+                Klaim palsu dikenakan sanksi tata tertib kampus <strong>Pasal 28</strong> &amp; pembekuan akun SSO universitas selama 1 semester.
               </p>
             </div>
           </div>
@@ -198,7 +230,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                   1
                 </span>
                 <span className="text-[13px] text-[#131b2e] font-bold">Pengajuan 3 Lapis K3L</span>
-                <span className="text-[11px] text-[#45474c]">Mengisi ciri tersembunyi & berkas digital.</span>
+                <span className="text-[11px] text-[#45474c]">Mengisi ciri tersembunyi &amp; berkas digital.</span>
               </div>
               <div className="relative flex flex-col">
                 <span className="absolute -left-6 top-0 w-4 h-4 rounded-full bg-[#dae2fd] flex items-center justify-center text-[#45474c] text-[10px] font-bold">
@@ -221,6 +253,13 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
         {/* RIGHT COLUMN: Multi-Tier Verification Form */}
         <section className="lg:col-span-8 flex flex-col gap-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {formError && (
+              <div className="p-4 rounded-xl bg-[#ffdad6] border border-[#ba1a1a]/30 text-[#ba1a1a] flex items-start gap-2.5 text-[13px] font-semibold">
+                <span className="material-symbols-outlined text-[20px] mt-0.5">error</span>
+                <span>{formError}</span>
+              </div>
+            )}
+
             {/* TIER 1: Secret Clue Match */}
             <div className="bg-white rounded-2xl shadow-sm border border-[#eaedff] p-6 flex flex-col gap-4">
               <div className="flex items-center justify-between gap-2 border-b border-[#f2f3ff] pb-3">
@@ -276,7 +315,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                   maxLength={800}
                   value={secretClue}
                   onChange={(e) => setSecretClue(e.target.value)}
-                  placeholder="Misal: Nomor seri Apple (Serial Number), nama akun user macOS login, gambar desktop wallpaper yang terpasang, goresan mikro di pojok kanan bawah bodi, warna kabel charger dan stiker tersembunyi di adapter charger..."
+                  placeholder="Misal: Nomor seri barang, nama perangkat Bluetooth, wallpaper layar terkunci, goresan mikro spesifik, atau isi khusus di dalam barang..."
                   required
                   rows={5}
                 />
@@ -309,18 +348,40 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                       Unggah Bukti Kepemilikan Tambahan
                     </h3>
                     <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
-                      Faktual, Nota, & Tangkapan Layar Digital
+                      Faktual, Nota, &amp; Tangkapan Layar Digital
                     </span>
                   </div>
                 </div>
                 <span className="px-2 py-0.5 rounded bg-[#eaedff] text-[#131b2e] text-[11px] font-bold">
-                  Min. 1 Berkas
+                  {isSecondHand ? 'Opsional (Second)' : 'Min. 1 Berkas'}
                 </span>
               </div>
 
               {/* Upload Dropzone Area */}
               <div
-                className="relative rounded-xl p-6 flex flex-col items-center justify-center text-center bg-[#f2f3ff] hover:bg-[#e2e7ff] transition-all cursor-pointer group border-2 border-dashed border-[#c5c6cd]"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    document.getElementById('fileUploadInput')?.click();
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragging(true);
+                }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  appendFiles(e.dataTransfer.files);
+                }}
+                className={`relative rounded-xl p-6 flex flex-col items-center justify-center text-center transition-all cursor-pointer group border-2 border-dashed ${
+                  isDragging
+                    ? 'bg-[#dce1ff] border-[#1d4ed8]'
+                    : 'bg-[#f2f3ff] hover:bg-[#e2e7ff] border-[#c5c6cd]'
+                }`}
                 onClick={() => document.getElementById('fileUploadInput')?.click()}
               >
                 <input
@@ -328,18 +389,18 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                   className="hidden"
                   id="fileUploadInput"
                   multiple
-                  onChange={handleAddFile}
+                  onChange={(e) => appendFiles(e.target.files)}
                   type="file"
                 />
                 <div className="w-14 h-14 rounded-full bg-[#dce1ff] flex items-center justify-center text-[#1d4ed8] mb-2 group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-[30px]">cloud_upload</span>
                 </div>
                 <h4 className="text-[14px] font-bold text-[#131b2e]">
-                  Tarik & Letakkan Berkas Bukti di Sini, atau{' '}
+                  Tarik &amp; Letakkan Berkas Bukti di Sini, atau{' '}
                   <span className="text-[#1d4ed8] underline">Jelajahi Berkas</span>
                 </h4>
                 <p className="text-[12px] text-[#45474c] max-w-md mt-1 leading-relaxed">
-                  Dukungan: Invoice / Struk Pembelian resmi (iBox/Digimap), Foto lama bersama laptop, Screenshot akun iCloud & Serial Number, atau Kartu Garansi.
+                  Dukungan: Invoice / Struk Pembelian resmi, Foto lama bersama barang, Screenshot akun &amp; Serial Number, atau Kartu Garansi.
                 </p>
                 <span className="font-mono text-[11px] text-[#75777d] mt-2">
                   Format: JPG, PNG, PDF (Maks. 10MB per berkas)
@@ -350,7 +411,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {files.map((file, idx) => (
                   <div
-                    key={idx}
+                    key={`${file.name}-${idx}`}
                     className="flex items-center gap-2.5 p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] relative"
                   >
                     <div className="w-10 h-10 rounded-lg bg-[#e2e7ff] flex items-center justify-center text-[#1d4ed8] flex-shrink-0">
@@ -358,16 +419,16 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-[12px] font-bold text-[#131b2e] truncate">
-                        {file}
+                        {file.name}
                       </span>
                       <span className="font-mono text-[10px] text-[#45474c]">
-                        Tersemat • Terverifikasi
+                        {file.size} • Terlampir
                       </span>
                     </div>
                     <button
                       aria-label="Hapus file"
                       className="text-[#75777d] hover:text-[#ba1a1a] transition-colors p-1 cursor-pointer"
-                      onClick={() => removeFile(file)}
+                      onClick={() => removeFile(file.name)}
                       type="button"
                     >
                       <span className="material-symbols-outlined text-[16px]">close</span>
@@ -381,7 +442,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                   className="flex items-center justify-center p-3 rounded-xl bg-white hover:bg-[#f2f3ff] border border-dashed border-[#1d4ed8] transition-colors cursor-pointer text-[#1d4ed8] text-[13px] font-bold gap-2"
                 >
                   <span className="material-symbols-outlined text-[20px]">add_circle</span>
-                  <span>Tambah Berkas</span>
+                  <span>{files.length > 0 ? 'Tambah Berkas' : 'Pilih Berkas Bukti'}</span>
                 </button>
               </div>
 
@@ -390,7 +451,10 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                 <input
                   className="w-4 h-4 rounded text-[#1d4ed8] mt-1 cursor-pointer"
                   checked={isSecondHand}
-                  onChange={(e) => setIsSecondHand(e.target.checked)}
+                  onChange={(e) => {
+                    setIsSecondHand(e.target.checked);
+                    setFormError(null);
+                  }}
                   type="checkbox"
                 />
                 <div className="flex flex-col">
@@ -398,7 +462,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                     Barang dibeli bekas (second) / Tidak memiliki struk resmi
                   </span>
                   <span className="text-[12px] text-[#45474c] mt-0.5">
-                    Jika dicentang, tim verifikator akan menitikberatkan validasi pada pencocokan password/biometrik perangkat dan identitas Apple ID/Akun di posko loker.
+                    Jika dicentang, tim verifikator akan menitikberatkan validasi pada pencocokan ciri rahasia dan verifikasi identitas langsung di posko loker.
                   </span>
                 </div>
               </label>
@@ -413,7 +477,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                   </div>
                   <div>
                     <h3 className="text-[18px] font-bold text-[#091426] leading-tight">
-                      Konfirmasi Identitas Pelapor & Pengambilan
+                      Konfirmasi Identitas Pelapor &amp; Pengambilan
                     </h3>
                     <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
                       Otentikasi SSO Kampus Terintegrasi
@@ -430,19 +494,19 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#f2f3ff] p-4 rounded-xl border border-[#eaedff]">
                 <div>
                   <span className="text-[11px] font-bold text-[#45474c] uppercase">Nama Mahasiswa</span>
-                  <p className="text-[14px] font-bold text-[#091426] mt-0.5">Ahmad Zaki</p>
+                  <p className="text-[14px] font-bold text-[#091426] mt-0.5">{userProfile.name}</p>
                 </div>
                 <div>
                   <span className="text-[11px] font-bold text-[#45474c] uppercase">NIM</span>
-                  <p className="font-mono text-[14px] font-bold text-[#091426] mt-0.5">13521098</p>
+                  <p className="font-mono text-[14px] font-bold text-[#091426] mt-0.5">{userProfile.nim}</p>
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-[#45474c] uppercase">Fakultas / Prodi</span>
-                  <p className="text-[13px] text-[#131b2e] mt-0.5">STEI-K / Teknik Informatika</p>
+                  <span className="text-[11px] font-bold text-[#45474c] uppercase">Program Studi</span>
+                  <p className="text-[13px] text-[#131b2e] mt-0.5">{userProfile.program}</p>
                 </div>
                 <div>
                   <span className="text-[11px] font-bold text-[#45474c] uppercase">Email Kampus</span>
-                  <p className="font-mono text-[12px] text-[#131b2e] mt-0.5">13521098@std.stei.ac.id</p>
+                  <p className="font-mono text-[12px] text-[#131b2e] mt-0.5 truncate">{userProfile.email}</p>
                 </div>
                 <div>
                   <label className="text-[11px] font-bold text-[#45474c] uppercase block" htmlFor="waPhoneInput">
@@ -461,7 +525,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                   <span className="text-[11px] font-bold text-[#45474c] uppercase">Status Akademik</span>
                   <p className="text-[12px] text-[#00a472] font-bold flex items-center gap-1.5 mt-0.5">
                     <span className="w-2 h-2 rounded-full bg-[#00a472]"></span>
-                    Mahasiswa Reguler Aktif
+                    {userProfile.status}
                   </p>
                 </div>
               </div>
@@ -489,7 +553,7 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                     <div className="flex flex-col">
                       <span className="text-[13px] font-bold">Ambil Langsung oleh Pemilik</span>
                       <span className="text-[12px] text-[#45474c] mt-0.5">
-                        Datang langsung ke Loket Posko K3L Perpustakaan Pusat Lt. 1 dengan menunjukkan e-KTM asli dan QR Pengambilan.
+                        Datang langsung ke Loket Posko K3L dengan menunjukkan e-KTM asli dan QR Pengambilan.
                       </span>
                     </div>
                   </label>
@@ -523,14 +587,16 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     checked={integrityPact}
-                    onChange={(e) => setIntegrityPact(e.target.checked)}
+                    onChange={(e) => {
+                      setIntegrityPact(e.target.checked);
+                      setFormError(null);
+                    }}
                     className="w-5 h-5 rounded text-[#1d4ed8] mt-0.5 flex-shrink-0 cursor-pointer"
                     id="integrityPactCheck"
-                    required
                     type="checkbox"
                   />
                   <span className="text-[13px] text-[#131b2e] leading-snug">
-                    Saya menyatakan dengan sungguh-sungguh bahwa <strong>barang ini adalah milik sah saya</strong>. Saya siap mempertanggungjawabkan pernyataan ini di hadapan Sidang Komisi Etik & Disiplin Mahasiswa serta aparat hukum berwenang apabila ditemukan manipulasi data atau klaim palsu.
+                    Saya menyatakan dengan sungguh-sungguh bahwa <strong>barang ini adalah milik sah saya</strong>. Saya siap mempertanggungjawabkan pernyataan ini di hadapan Sidang Komisi Etik &amp; Disiplin Mahasiswa serta aparat hukum berwenang apabila ditemukan manipulasi data atau klaim palsu.
                   </span>
                 </label>
               </div>
@@ -544,15 +610,16 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-[#45474c] hover:text-[#131b2e] hover:bg-[#f2f3ff] transition-colors text-[13px] font-bold cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                Batal & Kembali ke Katalog
+                Batal &amp; Kembali ke Katalog
               </button>
 
               <button
                 type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-[#1d4ed8] text-white hover:bg-[#1d4ed8]/90 transition-all text-[14px] font-bold shadow-md active:scale-95 cursor-pointer"
+                disabled={Boolean(submittedClaimId)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-[#1d4ed8] text-white hover:bg-[#1d4ed8]/90 transition-all text-[14px] font-bold shadow-md active:scale-95 cursor-pointer disabled:opacity-60"
               >
                 <span className="material-symbols-outlined text-[20px]">verified</span>
-                Kirimkan Pengajuan Klaim
+                <span>{submittedClaimId ? 'Mengirimkan...' : 'Kirimkan Pengajuan Klaim'}</span>
               </button>
             </div>
           </form>
@@ -560,13 +627,13 @@ export const ClaimItemView: React.FC<ClaimItemViewProps> = ({
       </div>
 
       {/* Floating Notification Toast */}
-      {showNotification && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#283044] text-[#eef0ff] p-4 rounded-2xl shadow-2xl flex items-start gap-3 animate-bounce">
+      {submittedClaimId && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#283044] text-[#eef0ff] p-4 rounded-2xl shadow-2xl flex items-start gap-3">
           <span className="material-symbols-outlined text-[#6ffbbe] text-[26px]">task_alt</span>
           <div className="flex flex-col">
             <span className="text-[14px] font-bold">Klaim Berhasil Dikirimkan!</span>
             <span className="text-[12px] text-[#eef0ff]/80 mt-0.5">
-              Tiket #{item.claimId || 'CLM-2024-1029'} telah dibuat. Notifikasi peninjauan dikirim ke WhatsApp Anda.
+              Tiket #{submittedClaimId} telah dibuat dan masuk ke antrean Koordinator Posko.
             </span>
           </div>
         </div>

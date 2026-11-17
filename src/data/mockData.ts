@@ -23,9 +23,16 @@ export interface FoundItem {
   claimantEmail?: string;
   claimantMajor?: string;
   claimantSecretAnswer?: string;
+  claimEvidenceFiles?: string[];
+  pickupMethod?: 'direct' | 'proxy';
+  isSecondHand?: boolean;
+  claimSubmittedAt?: string;
   aiMatchScore?: number;
+  auditorNotes?: string;
+  verificationStatusNote?: string;
   pickupCode?: string;
   bastNumber?: string;
+  bastDate?: string;
 }
 
 export interface LostReport {
@@ -280,7 +287,35 @@ export const INITIAL_FOUND_ITEMS: FoundItem[] = [
   }
 ];
 
-export const INITIAL_USER_PROFILE = {
+export interface UserProfile {
+  name: string;
+  nim: string;
+  program: string;
+  faculty: string;
+  email: string;
+  phone: string;
+  status: string;
+  ssoId: string;
+  integrityScore: number;
+  preferredPosko: string;
+  maskPublicName: boolean;
+  itemsFoundReturned: number;
+  itemsPersonalRecovered: number;
+  notifications: {
+    whatsappInstant: boolean;
+    emailSummary: boolean;
+    retentionWarning: boolean;
+  };
+}
+
+export function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'KP';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+export const INITIAL_USER_PROFILE: UserProfile = {
   name: 'Ahmad Zaki Pratama',
   nim: '13521098',
   program: 'Teknik Informatika (S1 Reguler)',

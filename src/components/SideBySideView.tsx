@@ -1,36 +1,67 @@
 import React, { useState } from 'react';
-import { FoundItem } from '../data/mockData';
+import { FoundItem, getInitials } from '../data/mockData';
 
 interface SideBySideViewProps {
   item: FoundItem;
   onNavigate: (view: string) => void;
-  onApprove: (item: FoundItem) => void;
+  onApprove: (item: FoundItem, auditorNotes?: string) => void;
+  onReject: (item: FoundItem, auditorNotes?: string) => void;
+  onRequestProof: (item: FoundItem, auditorNotes?: string) => void;
 }
 
 export const SideBySideView: React.FC<SideBySideViewProps> = ({
   item,
   onNavigate,
   onApprove,
+  onReject,
+  onRequestProof,
 }) => {
-  const [checkSticker, setCheckSticker] = useState(true);
-  const [checkWallpaper, setCheckWallpaper] = useState(true);
+  const [checkFeature, setCheckFeature] = useState(true);
+  const [checkCondition, setCheckCondition] = useState(true);
   const [checkProof, setCheckProof] = useState(true);
   const [auditorNotes, setAuditorNotes] = useState(
-    'Semua 3 poin identifikasi ciri rahasia terverifikasi valid tanpa sanggahan. Mahasiswa diwajibkan membawa KTM asli fisik saat pengambilan di Locker 12.'
+    item.auditorNotes ||
+      'Semua poin identifikasi ciri rahasia terverifikasi valid. Mahasiswa wajib membawa KTM asli fisik saat pengambilan di loker posko.'
   );
   const [modalState, setModalState] = useState<'none' | 'approve' | 'reject' | 'need_proof'>('none');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const matchScore = item.aiMatchScore ?? 88;
+  const claimantName = item.claimantName || 'Ahmad Zaki Al-Farisi';
+  const claimantNim = item.claimantNim || '13521098';
+  const claimantMajor = item.claimantMajor || 'Teknik Informatika';
+  const evidenceFiles =
+    item.claimEvidenceFiles && item.claimEvidenceFiles.length > 0
+      ? item.claimEvidenceFiles
+      : ['Invoice_Pembelian.pdf', 'Screenshot_Serial.png', 'Foto_Kepemilikan.jpg'];
 
   const handleConfirmAction = () => {
     if (modalState === 'approve') {
-      onApprove(item);
-      alert('Sukses! Tiket Pengambilan #TKT-8819 berhasil diterbitkan. Data telah tersinkronisasi ke Posko Rektorat.');
-      onNavigate('coordinator');
-    } else if (modalState === 'reject') {
-      alert(`Klaim #${item.claimId || 'CLM-9032'} telah ditolak.`);
-      onNavigate('coordinator');
-    } else {
-      alert('Permintaan bukti telah dikirimkan ke Mahasiswa (Ahmad Zaki). SLA ditangguhkan sementara.');
+      onApprove(item, auditorNotes);
       setModalState('none');
+      setToastMsg(
+        `Tiket pengambilan posko untuk #${item.id} berhasil diterbitkan! Mengalihkan ke antrean...`
+      );
+      setTimeout(() => {
+        setToastMsg(null);
+        onNavigate('coordinator');
+      }, 1500);
+    } else if (modalState === 'reject') {
+      onReject(item, auditorNotes);
+      setModalState('none');
+      setToastMsg(`Klaim #${item.claimId || item.id} ditolak & barang dibuka kembali di katalog.`);
+      setTimeout(() => {
+        setToastMsg(null);
+        onNavigate('coordinator');
+      }, 1500);
+    } else {
+      onRequestProof(item, auditorNotes);
+      setModalState('none');
+      setToastMsg(
+        `Permintaan bukti tambahan telah dikirim ke ${claimantName} (${claimantNim}).`
+      );
+      setTimeout(() => setToastMsg(null), 3500);
     }
   };
 
@@ -39,7 +70,6 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
       {/* Top Progress & Case Overview Bar */}
       <section className="w-full px-6 py-4 bg-white border-b border-[#eaedff] shadow-xs">
         <div className="flex flex-col gap-3 max-w-7xl mx-auto">
-          {/* Breadcrumb & Badges */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <nav className="flex items-center gap-1.5 text-[#45474c] text-[13px] font-semibold">
               <button
@@ -51,7 +81,9 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
               <span>Antrean Klaim</span>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span className="text-[#091426] font-bold">Validasi Kasus #{item.claimId || 'CLM-9032'}</span>
+              <span className="text-[#091426] font-bold">
+                Validasi Kasus #{item.claimId || item.id}
+              </span>
               <span className="px-2 py-0.5 rounded-full bg-[#f2f3ff] text-[#091426] font-mono text-[11px]">
                 Ref: #{item.id}
               </span>
@@ -60,7 +92,7 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f2f3ff] text-[#131b2e] text-[11px] font-bold uppercase">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#1d4ed8]"></span>
-                <span>Antrean Validasi Manual</span>
+                <span>{item.statusLabel}</span>
               </div>
               <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-[#f2f3ff] text-[#131b2e] font-mono text-[11px] font-bold">
                 <span className="material-symbols-outlined text-[15px] text-[#45474c]">schedule</span>
@@ -69,13 +101,12 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
             </div>
           </div>
 
-          {/* Title & AI Gauge */}
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-1">
             <div className="space-y-1">
               <div className="flex items-center gap-3 flex-wrap">
                 <h1 className="text-2xl font-bold text-[#091426] tracking-tight">{item.title}</h1>
                 <span className="px-2.5 py-0.5 rounded-md bg-[#1d4ed8] text-white text-[11px] font-bold">
-                  Elektronik Berharga
+                  {item.categoryLabel}
                 </span>
               </div>
               <div className="flex items-center gap-4 text-[#45474c] text-[13px] flex-wrap">
@@ -85,7 +116,7 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">inventory_2</span>
-                  Locker Penyimpanan Fisik: <strong className="text-[#091426]">L-12 (Gedung Rektorat Lt. 1)</strong>
+                  Penyimpanan Fisik: <strong className="text-[#091426]">{item.storageLocation}</strong>
                 </span>
               </div>
             </div>
@@ -106,19 +137,23 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="currentColor"
-                    strokeDasharray="88, 100"
+                    strokeDasharray={`${matchScore}, 100`}
                     strokeLinecap="round"
                     strokeWidth="3.5"
                   />
                 </svg>
-                <span className="absolute text-[13px] font-extrabold text-[#091426]">88%</span>
+                <span className="absolute text-[13px] font-extrabold text-[#091426]">{matchScore}%</span>
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1 text-[13px] font-bold text-[#091426]">
                   <span className="material-symbols-outlined text-[16px] text-[#1d4ed8]">auto_awesome</span>
-                  <span>Kesesuaian Ciri AI: Sangat Tinggi</span>
+                  <span>
+                    Kesesuaian Ciri AI: {matchScore >= 85 ? 'Sangat Tinggi' : 'Cukup Sesuai'}
+                  </span>
                 </div>
-                <p className="text-[12px] text-[#45474c]">3 dari 3 kunci deskriptor semantik cocok identik</p>
+                <p className="text-[12px] text-[#45474c]">
+                  Pembandingan otomatis deskriptor fisik &amp; jawaban pengklaim
+                </p>
               </div>
             </div>
           </div>
@@ -139,16 +174,15 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#45474c] block">
                     Source of Truth
                   </span>
-                  <h2 className="text-[15px] font-bold text-[#091426]">Data Fisik Petugas & Penemu</h2>
+                  <h2 className="text-[15px] font-bold text-[#091426]">Data Fisik Petugas &amp; Penemu</h2>
                 </div>
               </div>
               <span className="px-2.5 py-0.5 rounded-full bg-[#dae2fd] text-[#091426] font-mono text-[11px] font-bold">
-                TERKUNCI #L-12
+                REF #{item.id}
               </span>
             </div>
 
             <div className="p-5 space-y-4 flex-1">
-              {/* Intake metadata */}
               <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-white border border-[#eaedff] text-[12px]">
                 <div>
                   <span className="text-[#45474c] text-[10px] uppercase font-bold block">Pelapor Penemu</span>
@@ -158,7 +192,7 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                 <div>
                   <span className="text-[#45474c] text-[10px] uppercase font-bold block">Waktu Serah Fisik</span>
                   <span className="font-bold text-[#091426] block mt-0.5">{item.foundDate}</span>
-                  <span className="text-[#45474c] text-[11px]">Di Posko Rektorat</span>
+                  <span className="text-[#45474c] text-[11px] truncate block">{item.storageLocation}</span>
                 </div>
               </div>
 
@@ -166,54 +200,47 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-bold text-[#091426]">
-                    Dokumentasi Fisik Petugas Posko (4 Foto)
+                    Dokumentasi Fisik Petugas Posko
                   </span>
-                  <span className="text-[11px] font-bold text-[#1d4ed8]">Perbesar Grid</span>
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="text-[11px] font-bold text-[#1d4ed8] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[14px]">zoom_in</span>
+                    <span>Perbesar Grid</span>
+                  </button>
                 </div>
                 <div className="grid grid-cols-2 gap-2.5">
-                  <div className="relative rounded-xl overflow-hidden aspect-video bg-[#eaedff]">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="relative rounded-xl overflow-hidden aspect-video bg-[#eaedff] cursor-pointer group text-left"
+                  >
                     <img
                       src={item.imageUrl}
-                      alt="Fisik Depan"
-                      className="w-full h-full object-cover"
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                     <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-[#091426]/80 text-white font-mono text-[10px]">
-                      Fisik Depan
+                      Foto Utama Barang
                     </span>
-                  </div>
+                  </button>
 
-                  <div className="relative rounded-xl overflow-hidden aspect-video bg-[#eaedff]">
+                  <button
+                    type="button"
+                    onClick={() => setLightboxOpen(true)}
+                    className="relative rounded-xl overflow-hidden aspect-video bg-[#eaedff] cursor-pointer group text-left"
+                  >
                     <img
                       src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe-PGHU3sFiddrwp7zh73EPH7G5QVZ-2oEuXsPn_nVV_oXZ1gGguNHHAdststcNTsxFORwrBbKckukcU8PWtanBaOxcayoxx36Vt0MlG95RC9oxbk-aN7lGvzN1SbUeoOkKaAbfbeSf-OjDNmqjzEd24LbNCMJvNf4Sklm3m6AASf-QI5A1oNV8E4I6avn4Yy7NOEtelvboNdI-1pn66HOrlJyBwwTND8Gp7D4BuI"
-                      alt="Stiker Rahasia"
-                      className="w-full h-full object-cover"
+                      alt="Detail Ciri Rahasia"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                     <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-[#091426]/80 text-white font-mono text-[10px]">
-                      Ciri Rahasia #1 (Stiker)
+                      Detail Ciri Fisik
                     </span>
-                  </div>
-
-                  <div className="relative rounded-xl overflow-hidden aspect-video bg-[#eaedff]">
-                    <img
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNRkb0YGUW9uGbZv9fsvQWcMXsx17tt1dYdp-rmCThHcjQQi2ILjDHCZzqxTwjqKYaqEz92bkBheXeivjvYIgdLNyWwsfwSvyzk6pLR4mVdmHO2TNjqncsH3lcWV1T9ui2OpyqBm5TkXmNYLpjf78n3rJBiv5NQ1GlGOvg5b94405_hNWM6ayHI01ENPrlO0GwDkyGInVMe260HLCDjFd7oLHTD2cihrCagSbzxL8"
-                      alt="Layar Kunci"
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-[#091426]/80 text-white font-mono text-[10px]">
-                      Layar Kunci Menyala
-                    </span>
-                  </div>
-
-                  <div className="relative rounded-xl overflow-hidden aspect-video bg-[#eaedff]">
-                    <img
-                      src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBU9Nl6ktbWTaXvNRBoHZ8_dSTRb_ybnkQaOtoAJEujCAX79Kw7V9Mge8gF6cD7nwUlm8FssdNje-2KJzi41cJy9BQc8kVmfAZWtHqKnJwvoLnernqQZ4i4Kl0ctLfEoQmJV8vh4AlIH2ZBwiVsvCTDI_D17fD5ZiqKnsVs7oGw4HVuNT8ksDBShyn_jJxxzhSptJhhSPo7OQrQUrCH2qFe6nGIHf4gc13iMtVFkw"
-                      alt="Engsel mikro"
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-[#091426]/80 text-white font-mono text-[10px]">
-                      Engsel Bumper Mikro
-                    </span>
-                  </div>
+                  </button>
                 </div>
               </div>
 
@@ -224,41 +251,29 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                   Ciri Rahasia Fisik Tercatat (Kurator K3L)
                 </span>
                 <div className="space-y-2 text-[12px]">
-                  <div className="p-3 rounded-xl bg-white border border-[#eaedff]">
-                    <div className="flex justify-between font-bold text-[#091426]">
-                      <span>1. Stiker GitHub di Casing Belakang</span>
-                      <span className="text-[10px] text-[#45474c]">Sudut Kiri Bawah</span>
+                  <div className="p-3.5 rounded-xl bg-white border border-[#eaedff]">
+                    <div className="flex justify-between font-bold text-[#091426] mb-1">
+                      <span>Catatan Rahasia Internal Posko</span>
+                      <span className="text-[10px] text-[#1d4ed8] font-mono">TERENKRIPSI AES-256</span>
                     </div>
-                    <p className="text-[#45474c] mt-0.5">
-                      "Ada stiker GitHub Octocat kecil warna monokrom di sudut kiri bawah casing belakang perangkat."
+                    <p className="text-[#45474c] leading-relaxed">
+                      &ldquo;{item.secretClueRegistered}&rdquo;
                     </p>
                   </div>
 
                   <div className="p-3 rounded-xl bg-white border border-[#eaedff]">
-                    <div className="flex justify-between font-bold text-[#091426]">
-                      <span>2. Digit Serial Number Laser</span>
-                      <span className="text-[10px] text-[#45474c]">Laser Engraving</span>
+                    <div className="flex justify-between font-bold text-[#091426] mb-1">
+                      <span>Deskripsi Publik Terdaftar</span>
+                      <span className="text-[10px] text-[#45474c]">Katalog</span>
                     </div>
-                    <p className="text-[#45474c] mt-0.5">
-                      "Serial number chasis belakang berakhiran ...782X (Daftar lengkap: C02GN0...782X)."
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-white border border-[#eaedff]">
-                    <div className="flex justify-between font-bold text-[#091426]">
-                      <span>3. Wallpaper Layar Kunci</span>
-                      <span className="text-[10px] text-[#45474c]">Tampilan Visual</span>
-                    </div>
-                    <p className="text-[#45474c] mt-0.5">
-                      "Wallpaper layar menampilkan foto kucing bulu oranye mengenakan topi toga sarjana."
-                    </p>
+                    <p className="text-[#45474c]">{item.publicDesc}</p>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* RIGHT COLUMN: Claimant Submission (Student Inputs & Evidence) */}
+          {/* RIGHT COLUMN: Claimant Submission */}
           <section className="flex flex-col rounded-2xl bg-white border border-[#eaedff] shadow-sm overflow-hidden">
             <div className="p-4 bg-[#1d4ed8] text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -269,28 +284,27 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                   <span className="text-[10px] font-bold uppercase tracking-wider text-white/80 block">
                     Pengajuan Mahasiswa
                   </span>
-                  <h2 className="text-[15px] font-bold text-white">Jawaban & Dokumen Pengklaim</h2>
+                  <h2 className="text-[15px] font-bold text-white">Jawaban &amp; Dokumen Pengklaim</h2>
                 </div>
               </div>
               <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-white text-[11px] font-bold">
-                SSO ITB Terverifikasi
+                SSO Terverifikasi
               </span>
             </div>
 
             <div className="p-5 space-y-4 flex-1">
-              {/* Claimant Profile */}
               <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-full bg-[#091426] text-white flex items-center justify-center font-bold text-[14px]">
-                    AZ
+                    {getInitials(claimantName)}
                   </div>
                   <div>
                     <h3 className="text-[14px] font-bold text-[#091426] flex items-center gap-1.5">
-                      {item.claimantName || 'Ahmad Zaki Al-Farisi'}
+                      {claimantName}
                       <span className="material-symbols-outlined text-[16px] text-[#1d4ed8]">verified</span>
                     </h3>
                     <p className="text-[12px] text-[#45474c]">
-                      NIM {item.claimantNim || '13521098'} • {item.claimantMajor || 'Teknik Informatika'}
+                      NIM {claimantNim} • {claimantMajor}
                     </p>
                   </div>
                 </div>
@@ -302,55 +316,40 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                 </button>
               </div>
 
-              {/* Answers submitted */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[13px] font-bold text-[#091426]">
-                    Jawaban Ciri Rahasia Mandiri
+                    Jawaban Ciri Rahasia Pengklaim
                   </span>
                   <span className="px-2 py-0.5 rounded bg-[#f2f3ff] text-[#45474c] text-[10px] font-bold">
-                    Disubmit 24 Okt, 11:15 WIB
+                    {item.claimSubmittedAt || 'Disubmit via Portal SSO'}
                   </span>
                 </div>
 
                 <div className="space-y-2 text-[12px]">
-                  <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff]">
-                    <div className="flex justify-between font-bold">
-                      <span className="text-[#091426]">Pernyataan Ciri Stiker</span>
+                  <div className="p-3.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff]">
+                    <div className="flex justify-between font-bold mb-1">
+                      <span className="text-[#091426]">Deskripsi Ciri Khusus Mahasiswa</span>
                       <span className="text-[#00a472] flex items-center gap-1 font-bold">
                         <span className="material-symbols-outlined text-[15px]">check_circle</span>
-                        Cocok Identik
+                        Skor Kecocokan {matchScore}%
                       </span>
                     </div>
-                    <p className="text-[#45474c] mt-1 bg-white p-2 rounded-lg border border-[#eaedff]">
-                      “Di balik laptop ada stiker octocat GitHub warna hitam putih kecil di bagian pojok kiri bawah, agak sedikit terkelupas ujungnya.”
+                    <p className="text-[#131b2e] bg-white p-3 rounded-lg border border-[#eaedff] leading-relaxed">
+                      &ldquo;
+                      {item.claimantSecretAnswer ||
+                        'Pengklaim belum melengkapi jawaban rinci atau klaim diajukan melalui verifikasi tatap muka loket.'}
+                      &rdquo;
                     </p>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff]">
-                    <div className="flex justify-between font-bold">
-                      <span className="text-[#091426]">Pernyataan Wallpaper Layar</span>
-                      <span className="text-[#00a472] flex items-center gap-1 font-bold">
-                        <span className="material-symbols-outlined text-[15px]">check_circle</span>
-                        Cocok Identik
-                      </span>
-                    </div>
-                    <p className="text-[#45474c] mt-1 bg-white p-2 rounded-lg border border-[#eaedff]">
-                      “Wallpaper saya pakai foto kucing oren peliharaan saya (namanya Milo) pakai toga wisuda mini.”
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff]">
-                    <div className="flex justify-between font-bold">
-                      <span className="text-[#091426]">Keterangan Aksesori & Kondisi</span>
-                      <span className="text-[#1d4ed8] flex items-center gap-1 font-bold">
-                        <span className="material-symbols-outlined text-[15px]">info</span>
-                        Informasi Tambahan
-                      </span>
-                    </div>
-                    <p className="text-[#45474c] mt-1 bg-white p-2 rounded-lg border border-[#eaedff]">
-                      “Kabel charger kepala adapter 30W sedikit lecet di dekat colokan type-C, dan karet engsel ada bekas baret halus.”
-                    </p>
+                  <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-center justify-between">
+                    <span className="font-bold text-[#091426]">Rencana Pengambilan</span>
+                    <span className="text-[#1d4ed8] font-semibold">
+                      {item.pickupMethod === 'proxy'
+                        ? 'Diwakilkan (Surat Kuasa Bermeterai)'
+                        : 'Ambil Langsung di Loket Posko'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -358,32 +357,23 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
               {/* Uploaded Evidence Files */}
               <div className="space-y-2 pt-1">
                 <span className="text-[13px] font-bold text-[#091426] block">
-                  Bukti Kepemilikan Faktual Terlampir
+                  Bukti Kepemilikan Faktual Terlampir ({evidenceFiles.length} Berkas)
                 </span>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="p-2.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between">
-                    <span className="material-symbols-outlined text-[24px] text-[#ba1a1a]">picture_as_pdf</span>
-                    <span className="text-[11px] font-bold text-[#091426] truncate mt-1">
-                      Invoice_iBox.pdf
-                    </span>
-                    <span className="text-[10px] text-[#45474c]">C02GN0...782X</span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between">
-                    <span className="material-symbols-outlined text-[24px] text-[#1d4ed8]">phonelink_lock</span>
-                    <span className="text-[11px] font-bold text-[#091426] truncate mt-1">
-                      FindMy_Lock.png
-                    </span>
-                    <span className="text-[10px] text-[#00a472] font-semibold">Lost Mode Aktif</span>
-                  </div>
-
-                  <div className="p-2.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between">
-                    <span className="material-symbols-outlined text-[24px] text-[#00a472]">photo_library</span>
-                    <span className="text-[11px] font-bold text-[#091426] truncate mt-1">
-                      Foto_Lama_2023.jpg
-                    </span>
-                    <span className="text-[10px] text-[#45474c]">Unggahan IG 2023</span>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {evidenceFiles.map((fname, idx) => (
+                    <div
+                      key={`${fname}-${idx}`}
+                      className="p-2.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between"
+                    >
+                      <span className="material-symbols-outlined text-[22px] text-[#1d4ed8]">
+                        {fname.toLowerCase().endsWith('.pdf') ? 'picture_as_pdf' : 'photo_library'}
+                      </span>
+                      <span className="text-[11px] font-bold text-[#091426] truncate mt-1">
+                        {fname}
+                      </span>
+                      <span className="text-[10px] text-[#00a472] font-semibold">Terlampir SSO</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -410,14 +400,14 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                 <label className="p-3.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={checkSticker}
-                    onChange={(e) => setCheckSticker(e.target.checked)}
+                    checked={checkFeature}
+                    onChange={(e) => setCheckFeature(e.target.checked)}
                     className="w-4 h-4 rounded text-[#1d4ed8] mt-0.5 cursor-pointer"
                   />
                   <div>
-                    <span className="text-[12px] font-bold text-[#091426] block">1. Stiker Fisik Cocok</span>
+                    <span className="text-[12px] font-bold text-[#091426] block">1. Ciri Khusus Cocok</span>
                     <span className="text-[11px] text-[#45474c]">
-                      Stiker GitHub di sudut kiri bawah terkonfirmasi identik posisi dan wujud.
+                      Deskripsi rahasia pengklaim identik dengan fisik di loker.
                     </span>
                   </div>
                 </label>
@@ -425,14 +415,14 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                 <label className="p-3.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={checkWallpaper}
-                    onChange={(e) => setCheckWallpaper(e.target.checked)}
+                    checked={checkCondition}
+                    onChange={(e) => setCheckCondition(e.target.checked)}
                     className="w-4 h-4 rounded text-[#1d4ed8] mt-0.5 cursor-pointer"
                   />
                   <div>
-                    <span className="text-[12px] font-bold text-[#091426] block">2. Wallpaper Identik</span>
+                    <span className="text-[12px] font-bold text-[#091426] block">2. Identitas SSO Sah</span>
                     <span className="text-[11px] text-[#45474c]">
-                      Layar kunci kucing toga wisuda sesuai deskripsi tanpa keraguan.
+                      NIM &amp; status akademik pengklaim aktif di SIAKAD.
                     </span>
                   </div>
                 </label>
@@ -445,9 +435,9 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                     className="w-4 h-4 rounded text-[#1d4ed8] mt-0.5 cursor-pointer"
                   />
                   <div>
-                    <span className="text-[12px] font-bold text-[#091426] block">3. Bukti Invoice Valid</span>
+                    <span className="text-[12px] font-bold text-[#091426] block">3. Bukti Pendukung Valid</span>
                     <span className="text-[11px] text-[#45474c]">
-                      Serial number cocok 100% dengan serial laser chasis posko.
+                      Lampiran atau verifikasi sekunder layak diterbitkan tiket.
                     </span>
                   </div>
                 </label>
@@ -477,7 +467,7 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-[#1d4ed8] animate-pulse"></div>
               <span className="text-[13px] font-bold text-[#091426]">
-                Status: Siap Eksekusi Keputusan
+                Status: {checkFeature && checkCondition && checkProof ? 'Siap Eksekusi Keputusan' : 'Lengkapi Checklist'}
               </span>
             </div>
             <span className="hidden md:inline text-[12px] text-[#45474c]">
@@ -509,11 +499,45 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
               className="px-6 py-2.5 rounded-xl bg-[#091426] hover:bg-[#1d4ed8] text-white font-bold text-[13px] transition-all flex items-center gap-2 shadow-md cursor-pointer active:scale-95"
             >
               <span className="material-symbols-outlined text-[18px] text-[#6ffbbe]">verified</span>
-              <span>Setujui Klaim & Terbitkan Tiket Posko</span>
+              <span>Setujui Klaim &amp; Terbitkan Tiket Posko</span>
             </button>
           </div>
         </div>
       </aside>
+
+      {/* Photo Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-50 bg-[#091426]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white max-w-3xl w-full rounded-2xl p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#f2f3ff] pb-3">
+              <h4 className="text-[16px] font-bold text-[#091426]">
+                Pratinjau Dokumentasi Fisik — #{item.id}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(false)}
+                className="p-1 rounded-lg hover:bg-[#f2f3ff] text-[#45474c] cursor-pointer"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="rounded-xl overflow-hidden bg-[#f2f3ff] border border-[#eaedff]">
+                <img src={item.imageUrl} alt={item.title} className="w-full h-64 object-cover" />
+                <p className="p-2 text-[12px] font-bold text-[#091426]">Foto Utama Katalog Posko</p>
+              </div>
+              <div className="rounded-xl overflow-hidden bg-[#f2f3ff] border border-[#eaedff]">
+                <img
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe-PGHU3sFiddrwp7zh73EPH7G5QVZ-2oEuXsPn_nVV_oXZ1gGguNHHAdststcNTsxFORwrBbKckukcU8PWtanBaOxcayoxx36Vt0MlG95RC9oxbk-aN7lGvzN1SbUeoOkKaAbfbeSf-OjDNmqjzEd24LbNCMJvNf4Sklm3m6AASf-QI5A1oNV8E4I6avn4Yy7NOEtelvboNdI-1pn66HOrlJyBwwTND8Gp7D4BuI"
+                  alt="Detail Tambahan"
+                  className="w-full h-64 object-cover"
+                />
+                <p className="p-2 text-[12px] font-bold text-[#091426]">Inspeksi Ciri Rahasia Internal</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {modalState !== 'none' && (
@@ -546,17 +570,17 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                     : 'Minta Dokumen Tambahan'}
                 </h4>
                 <span className="text-[12px] text-[#45474c]">
-                  Kasus #{item.claimId || 'CLM-9032'} ({item.title})
+                  Kasus #{item.claimId || item.id} ({item.title})
                 </span>
               </div>
             </div>
 
             <p className="text-[13px] text-[#45474c] leading-relaxed bg-[#f2f3ff] p-3 rounded-xl border border-[#eaedff]">
               {modalState === 'approve'
-                ? 'Tiket pengambilan posko #TKT-8819 akan langsung diterbitkan secara resmi. Notifikasi kode QR pengambilan akan otomatis dikirimkan ke WhatsApp mahasiswa (+62 812-9876-5432) dan email kampus.'
+                ? `Tiket pengambilan posko akan langsung diterbitkan untuk ${claimantName}. Notifikasi QR pengambilan dikirimkan ke WhatsApp ${item.claimantPhone || '+62 812-9876-5432'}.`
                 : modalState === 'reject'
-                ? 'Pengajuan klaim ini akan ditandai TIDAK VALID. Catatan penolakan akan dikirimkan ke mahasiswa dan barang tetap tersimpan di Locker 12.'
-                : 'Sistem akan mengirimkan permintaan unggah dokumen tambahan via notifikasi SSO & WhatsApp (batas waktu respons: 24 jam).'}
+                ? 'Pengajuan klaim ini akan ditolak dan barang dikembalikan ke status Siap Diklaim pada katalog publik.'
+                : `Sistem akan mengirimkan permintaan unggah dokumen tambahan kepada ${claimantName} via SSO & WhatsApp.`}
             </p>
 
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -572,10 +596,17 @@ export const SideBySideView: React.FC<SideBySideViewProps> = ({
                 onClick={handleConfirmAction}
                 className="px-5 py-2 rounded-xl bg-[#091426] text-white hover:bg-[#1d4ed8] text-[13px] font-bold cursor-pointer shadow-sm"
               >
-                Konfirmasi & Proses
+                Konfirmasi &amp; Proses
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {toastMsg && (
+        <div className="fixed bottom-20 right-6 z-50 max-w-md bg-[#091426] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3">
+          <span className="material-symbols-outlined text-[#6ffbbe] text-[22px]">task_alt</span>
+          <span className="text-[13px] font-semibold">{toastMsg}</span>
         </div>
       )}
     </div>

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { FoundItem } from '../data/mockData';
+import { FoundItem, UserProfile } from '../data/mockData';
 
 interface ReportLostViewProps {
   onNavigate: (view: string) => void;
   onOpenClaim: (item: FoundItem) => void;
   foundItems: FoundItem[];
+  userProfile: UserProfile;
   onSubmitReport: (report: {
     title: string;
     category: string;
@@ -29,6 +30,7 @@ export const ReportLostView: React.FC<ReportLostViewProps> = ({
   onNavigate,
   onOpenClaim,
   foundItems,
+  userProfile,
   onSubmitReport,
 }) => {
   const [title, setTitle] = useState('');
@@ -336,7 +338,7 @@ export const ReportLostView: React.FC<ReportLostViewProps> = ({
                   <div className="flex flex-col min-w-0">
                     <span className="text-[11px] text-[#45474c]">WhatsApp Pemberitahuan</span>
                     <span className="font-mono text-[13px] font-bold text-[#131b2e] truncate">
-                      +62 812-9842-1098
+                      {userProfile.phone}
                     </span>
                   </div>
                 </div>
@@ -348,7 +350,7 @@ export const ReportLostView: React.FC<ReportLostViewProps> = ({
                   <div className="flex flex-col min-w-0">
                     <span className="text-[11px] text-[#45474c]">Email Mahasiswa Aktif</span>
                     <span className="font-mono text-[12px] font-bold text-[#131b2e] truncate">
-                      ahmad.zaki@student.univ.ac.id
+                      {userProfile.email}
                     </span>
                   </div>
                 </div>

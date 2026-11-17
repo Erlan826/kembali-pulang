@@ -1,17 +1,84 @@
-import React, { useState } from 'react';
-import { FoundItem } from '../data/mockData';
+import React, { useMemo, useState } from 'react';
+import { FoundItem, LostReport } from '../data/mockData';
 
 interface CoordinatorDashboardViewProps {
   foundItems: FoundItem[];
+  lostReports: LostReport[];
   onNavigate: (view: string, itemId?: string) => void;
   onApproveClaim: (item: FoundItem) => void;
+  onVerifyIntake: (itemId: string) => void;
+  onUpdateLostReportStatus: (
+    reportId: string,
+    status: LostReport['status'],
+    matchedItemId?: string
+  ) => void;
 }
 
 export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> = ({
   foundItems,
+  lostReports,
   onNavigate,
+  onVerifyIntake,
+  onUpdateLostReportStatus,
 }) => {
-  const [filterType, setFilterType] = useState<'all' | 'claim' | 'found'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'claim' | 'found' | 'lost'>('all');
+  const [broadcastSent, setBroadcastSent] = useState<Record<string, boolean>>({});
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3500);
+  };
+
+  const activeLostReports = useMemo(
+    () => lostReports.filter((r) => r.status !== 'selesai'),
+    [lostReports]
+  );
+
+  const findSmartMatchForReport = (report: LostReport): FoundItem | undefined => {
+    const tokens = report.title
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length >= 4);
+    return foundItems.find((item) => {
+      if (item.status === 'selesai') return false;
+      const hay = `${item.title} ${item.publicDesc} ${item.location}`.toLowerCase();
+      return tokens.some((t) => hay.includes(t));
+    });
+  };
+
+  const foundQueueCount = foundItems.filter(
+    (i) => i.status === 'dilaporkan' || i.status === 'diverifikasi'
+  ).length;
+  const claimQueueCount = foundItems.filter((i) => i.status === 'dalam_klaim').length;
+  const readyPickupCount = foundItems.filter((i) => i.status === 'siap_ambil').length;
+  const completedCount = foundItems.filter((i) => i.status === 'selesai').length;
+
+  const filteredQueue = useMemo(() => {
+    const activeItems = foundItems.filter((i) => i.status !== 'selesai');
+    if (filterType === 'claim') {
+      return activeItems.filter((i) => i.status === 'dalam_klaim' || i.status === 'siap_ambil');
+    }
+    if (filterType === 'found') {
+      return activeItems.filter((i) => i.status === 'dilaporkan' || i.status === 'diverifikasi');
+    }
+    // Sort claims and ready pickups first in 'all' view
+    const priority: Record<FoundItem['status'], number> = {
+      dalam_klaim: 0,
+      siap_ambil: 1,
+      dilaporkan: 2,
+      diverifikasi: 3,
+      selesai: 4,
+    };
+    return [...activeItems].sort((a, b) => priority[a.status] - priority[b.status]);
+  }, [foundItems, filterType]);
+
+  const readyAppointments = foundItems.filter((i) => i.status === 'siap_ambil');
+
+  const handleBroadcast = (id: string, label: string) => {
+    setBroadcastSent((prev) => ({ ...prev, [id]: true }));
+    showToast(`Broadcast Ditmawa & portal kampus untuk "${label}" berhasil disiarkan!`);
+  };
 
   return (
     <div className="w-full">
@@ -25,13 +92,13 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="text-[17px] font-bold text-[#091426]">
-                  Pusat Operasional Posko K3L & Satpam Kampus
+                  Pusat Operasional Posko K3L &amp; Satpam Kampus
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-[#1d4ed8] text-white text-[10px] font-bold uppercase tracking-wider">
                   LIVE DESK
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-[#45474c] text-[12px] mt-0.5">
+              <div className="flex items-center gap-2 text-[#45474c] text-[12px] mt-0.5 flex-wrap">
                 <span className="flex items-center gap-1 font-semibold text-[#131b2e]">
                   <span className="material-symbols-outlined text-[15px] text-[#1d4ed8]">location_on</span>
                   Loket 1 - Gedung Perpustakaan Pusat
@@ -67,15 +134,14 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
         {/* Top KPI Metric Cards Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {/* Card 1 */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-[#eaedff] flex flex-col justify-between">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
-                  Temuan Masuk Baru
+                  Temuan Aktif Posko
                 </span>
                 <span className="text-3xl font-extrabold text-[#091426] mt-1">
-                  5 <span className="text-sm font-normal text-[#45474c]">Barang</span>
+                  {foundQueueCount} <span className="text-sm font-normal text-[#45474c]">Barang</span>
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-[#ffdad6] text-[#ba1a1a]">
@@ -84,13 +150,12 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
             </div>
             <div className="mt-4 pt-2 border-t border-[#f2f3ff] flex items-center justify-between text-[11px]">
               <span className="px-2 py-0.5 rounded-full bg-[#ffdad6] text-[#ba1a1a] font-bold uppercase">
-                Perhatian Segera
+                Terdaftar Posko
               </span>
-              <span className="text-[#45474c]">Perlu kurasi & seal</span>
+              <span className="text-[#45474c]">Siap kurasi &amp; klaim</span>
             </div>
           </div>
 
-          {/* Card 2 */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-[#eaedff] flex flex-col justify-between">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
@@ -98,7 +163,7 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                   Validasi Ciri Rahasia
                 </span>
                 <span className="text-3xl font-extrabold text-[#091426] mt-1">
-                  8 <span className="text-sm font-normal text-[#45474c]">Klaim</span>
+                  {claimQueueCount} <span className="text-sm font-normal text-[#45474c]">Klaim</span>
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-[#dce1ff] text-[#001551]">
@@ -107,13 +172,12 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
             </div>
             <div className="mt-4 pt-2 border-t border-[#f2f3ff] flex items-center justify-between text-[11px]">
               <span className="px-2 py-0.5 rounded-full bg-[#eaedff] text-[#1d4ed8] font-bold uppercase">
-                3 Prioritas Tinggi
+                Antrean Audit
               </span>
               <span className="text-[#45474c]">Side-by-Side</span>
             </div>
           </div>
 
-          {/* Card 3 */}
           <div className="bg-white p-5 rounded-2xl shadow-sm border border-[#eaedff] flex flex-col justify-between">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
@@ -121,7 +185,7 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                   Siap Ambil di Loket
                 </span>
                 <span className="text-3xl font-extrabold text-[#091426] mt-1">
-                  14 <span className="text-sm font-normal text-[#45474c]">Barang</span>
+                  {readyPickupCount} <span className="text-sm font-normal text-[#45474c]">Barang</span>
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-[#f2f3ff] text-[#1d4ed8]">
@@ -130,21 +194,20 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
             </div>
             <div className="mt-4 pt-2 border-t border-[#f2f3ff] flex items-center justify-between text-[11px]">
               <span className="px-2 py-0.5 rounded-full bg-[#f2f3ff] text-[#45474c] font-bold">
-                Siap Verifikasi Fisik
+                Siap Serah Terima
               </span>
-              <span className="text-[#45474c]">Loker Terverifikasi</span>
+              <span className="text-[#45474c]">Tiket BAST Terbit</span>
             </div>
           </div>
 
-          {/* Card 4 */}
           <div className="bg-[#091426] text-white p-5 rounded-2xl shadow-md flex flex-col justify-between">
             <div className="flex items-start justify-between">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-[#8590a6] uppercase tracking-wider">
-                  Kasus Sukses Bulan Ini
+                  Kasus Selesai Tuntas
                 </span>
                 <span className="text-3xl font-extrabold text-white mt-1">
-                  126 <span className="text-sm font-normal text-[#8590a6]">Kasus</span>
+                  {125 + completedCount} <span className="text-sm font-normal text-[#8590a6]">Kasus</span>
                 </span>
               </div>
               <div className="p-2 rounded-xl bg-[#1e293b] text-[#6ffbbe]">
@@ -152,7 +215,7 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
               </div>
             </div>
             <div className="mt-4 pt-2 border-t border-white/10 flex items-center justify-between text-[12px] font-bold text-[#4edea3]">
-              <span>Tingkat Sukses 91.4%</span>
+              <span>+{completedCount} Selesai Sesi Ini</span>
               <span className="text-[11px] text-[#8590a6]">Semester Ganjil</span>
             </div>
           </div>
@@ -170,23 +233,22 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                       Antrean Verifikasi Cepat (Quick Triage)
                     </h2>
                     <span className="px-2 py-0.5 rounded-full bg-[#eaedff] text-[#091426] font-mono text-[11px] font-bold">
-                      13 Antrean
+                      {filteredQueue.length} Antrean
                     </span>
                   </div>
                   <p className="text-[12px] text-[#45474c] mt-0.5">
-                    Prioritaskan pengujian kesesuaian ciri tersembunyi barang bernilai tinggi.
+                    Data tersinkronisasi real-time dengan laporan penemuan &amp; pengajuan klaim mahasiswa.
                   </p>
                 </div>
 
-                {/* Filter Tabs */}
-                <div className="flex items-center bg-[#f2f3ff] p-1 rounded-xl text-[12px] font-bold text-[#45474c]">
+                <div className="flex flex-wrap items-center bg-[#f2f3ff] p-1 rounded-xl text-[12px] font-bold text-[#45474c] gap-1">
                   <button
                     onClick={() => setFilterType('all')}
                     className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                       filterType === 'all' ? 'bg-white text-[#091426] shadow-xs' : 'hover:text-[#091426]'
                     }`}
                   >
-                    Semua Antrean (13)
+                    Semua ({foundQueueCount + claimQueueCount + readyPickupCount})
                   </button>
                   <button
                     onClick={() => setFilterType('claim')}
@@ -194,7 +256,7 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                       filterType === 'claim' ? 'bg-white text-[#091426] shadow-xs' : 'hover:text-[#091426]'
                     }`}
                   >
-                    Klaim Baru (8)
+                    Klaim ({claimQueueCount + readyPickupCount})
                   </button>
                   <button
                     onClick={() => setFilterType('found')}
@@ -202,18 +264,136 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                       filterType === 'found' ? 'bg-white text-[#091426] shadow-xs' : 'hover:text-[#091426]'
                     }`}
                   >
-                    Temuan Masuk (5)
+                    Temuan ({foundQueueCount})
+                  </button>
+                  <button
+                    onClick={() => setFilterType('lost')}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                      filterType === 'lost' ? 'bg-white text-[#ba1a1a] shadow-xs' : 'hover:text-[#091426]'
+                    }`}
+                  >
+                    Kehilangan ({activeLostReports.length})
                   </button>
                 </div>
               </div>
 
-              {/* Table */}
+              {filterType === 'lost' ? (
+                <div className="mt-4 space-y-3">
+                  {lostReports.length === 0 ? (
+                    <div className="py-8 text-center text-[#45474c] text-[13px]">
+                      Belum ada laporan kehilangan mahasiswa yang masuk.
+                    </div>
+                  ) : (
+                    lostReports.map((report) => {
+                      const smartMatch = findSmartMatchForReport(report);
+                      return (
+                        <div
+                          key={report.id}
+                          className="p-4 rounded-xl bg-[#f2f3ff]/80 border border-[#eaedff] flex flex-col gap-3"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-[11px] font-bold text-[#1d4ed8]">
+                                  {report.id}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                    report.status === 'selesai'
+                                      ? 'bg-[#6ffbbe] text-[#002113]'
+                                      : report.status === 'cocok'
+                                      ? 'bg-[#dce1ff] text-[#001551]'
+                                      : 'bg-[#ffdad6] text-[#ba1a1a]'
+                                  }`}
+                                >
+                                  {report.status === 'selesai'
+                                    ? 'Ditemukan'
+                                    : report.status === 'cocok'
+                                    ? 'Cocok Temuan'
+                                    : 'Dicari Posko'}
+                                </span>
+                                {smartMatch && report.status === 'menunggu' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-[#6ffbbe] text-[#002113] text-[10px] font-bold">
+                                    Smart Match: #{smartMatch.id}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="font-bold text-[#091426] text-[14px] mt-1">
+                                {report.title}
+                              </h4>
+                              <p className="text-[12px] text-[#45474c]">
+                                Lokasi terakhir: {report.locationLabel || report.location} • {report.datetime.replace('T', ' ')}
+                              </p>
+                            </div>
+
+                            <div className="text-right text-[11px] text-[#45474c] font-mono">
+                              <div>WA: {report.contactWa}</div>
+                              <div>{report.contactEmail}</div>
+                            </div>
+                          </div>
+
+                          <div className="p-3 rounded-lg bg-white border border-[#eaedff] text-[12px] text-[#131b2e]">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#1d4ed8] block mb-0.5">
+                              Ciri Rahasia Pelapor (Khusus Posko):
+                            </span>
+                            {report.secretClue}
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                            <span className="text-[11px] text-[#45474c]">
+                              {report.storageOrNote || 'Menunggu pencocokan barang masuk'}
+                            </span>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <button
+                                onClick={() =>
+                                  showToast(
+                                    `Notifikasi status laporan ${report.id} dikirim via Bot WhatsApp ke ${report.contactWa}.`
+                                  )
+                                }
+                                className="px-2.5 py-1.5 rounded-lg bg-white border border-[#dae2fd] text-[#091426] hover:bg-[#eaedff] text-[11px] font-bold cursor-pointer"
+                              >
+                                Hubungi WA
+                              </button>
+                              {report.status === 'menunggu' && (
+                                <button
+                                  onClick={() => {
+                                    onUpdateLostReportStatus(report.id, 'cocok', smartMatch?.id);
+                                    showToast(
+                                      smartMatch
+                                        ? `Laporan ${report.id} dicocokkan dengan Temuan #${smartMatch.id}.`
+                                        : `Laporan ${report.id} ditandai cocok dengan temuan posko.`
+                                    );
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg bg-[#1d4ed8] text-white hover:bg-[#1d4ed8]/90 text-[11px] font-bold cursor-pointer"
+                                >
+                                  {smartMatch ? `Cocokkan (#${smartMatch.id})` : 'Tandai Cocok'}
+                                </button>
+                              )}
+                              {report.status !== 'selesai' && (
+                                <button
+                                  onClick={() => {
+                                    onUpdateLostReportStatus(report.id, 'selesai');
+                                    showToast(`Laporan kehilangan ${report.id} ditandai selesai/ditemukan.`);
+                                  }}
+                                  className="px-3 py-1.5 rounded-lg bg-[#091426] text-white hover:bg-[#1e293b] text-[11px] font-bold cursor-pointer"
+                                >
+                                  Tandai Ditemukan
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              ) : (
               <div className="overflow-x-auto mt-4">
                 <table className="w-full text-left text-[13px]">
                   <thead>
                     <tr className="bg-[#f2f3ff] text-[#45474c] text-[11px] uppercase tracking-wider font-bold">
-                      <th className="py-3 px-3 rounded-l-lg">ID & Barang</th>
-                      <th className="py-3 px-3">Nama & Kategori</th>
+                      <th className="py-3 px-3 rounded-l-lg">ID &amp; Foto</th>
+                      <th className="py-3 px-3">Nama &amp; Kategori</th>
                       <th className="py-3 px-3">Pihak Terlibat</th>
                       <th className="py-3 px-3">Lokasi Fisik</th>
                       <th className="py-3 px-3">Status</th>
@@ -221,166 +401,245 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#f2f3ff]">
-                    {/* Row 1 */}
-                    {(filterType === 'all' || filterType === 'claim') && (
-                      <tr className="hover:bg-[#f2f3ff]/60 transition-colors">
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjQ2KkQcpnO7Moc8vXIKVDfhVnfx-HJyPtMa_ffK_yRgvrxGS8ePznyqZfDOSLKdz4TYpfqYiVquAYrZFXF8rzUAHV6Y0Vrg3o5JKEmo7vmWa4VCS6lkAavd6S_rqV3Kkddo_pXmpurTZTzHfkbgTS8dDMfuEi9qkt0Y2YNLYKGzlGUYob-VpLyOP8EGdJ-ijXRY-NOUt52Ci0RlQezIohD1Jbm6gGmuh9pQgzdcU"
-                              alt="MacBook"
-                              className="w-11 h-11 rounded-lg object-cover"
-                            />
-                            <div className="flex flex-col">
-                              <span className="font-mono font-bold text-[#091426]">#BRG-8841</span>
-                              <span className="text-[11px] text-[#45474c]">INV-2024-0891</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[#091426]">MacBook Air M2 13.6"</span>
-                            <span className="text-[11px] text-[#45474c]">Elektronik Premium</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[#091426]">Ahmad Zaki</span>
-                            <span className="font-mono text-[11px] text-[#45474c]">NIM: 13521098</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2.5 py-1 rounded-lg bg-[#dae2fd] text-[#091426] font-mono text-[11px] font-bold">
-                            Locker Safe #04
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 rounded-full bg-[#dce1ff] text-[#001551] text-[10px] font-bold uppercase">
-                            Ciri Rahasia
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              onClick={() => onNavigate('side-by-side', 'INV-2024-0891')}
-                              className="px-3 py-1.5 rounded-lg bg-[#1d4ed8] text-white hover:bg-[#1d4ed8]/90 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer shadow-xs"
-                            >
-                              <span className="material-symbols-outlined text-[15px]">compare</span>
-                              <span>Side-by-Side</span>
-                            </button>
-                            <button
-                              onClick={() => onNavigate('bast')}
-                              className="px-2.5 py-1.5 rounded-lg bg-[#091426] text-white text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
-                              title="Buka Berita Acara (BAST)"
-                            >
-                              <span className="material-symbols-outlined text-[15px]">description</span>
-                            </button>
-                          </div>
+                    {filteredQueue.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-[#45474c] text-[13px]">
+                          Tidak ada antrean pada filter ini.
                         </td>
                       </tr>
-                    )}
-
-                    {/* Row 2 */}
-                    {(filterType === 'all' || filterType === 'claim') && (
-                      <tr className="hover:bg-[#f2f3ff]/60 transition-colors">
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-2.5">
-                            <img
-                              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxn_MmZvADKG7_ISYL_pN7CJDuh9Z4JyCekg6wtFaz6pwtpVyspDgw0mSX7oBWP1HaIX_HI3sq8G7BWNOWF99_SuXSU6OmP-VhofErhmhO0SLAI4bLK7g4CKydfiwSD0DXUw6A91xe2FPD6YLpPYEgDwujK4jwFpkxbjdqzlX6Y4M0nqpJa9VDR0lJOFMnOPwnnc2TMCYWDwkN48qQcDyonDOPRm2irG8Sj8LLxy8"
-                              alt="Dompet"
-                              className="w-11 h-11 rounded-lg object-cover"
-                            />
-                            <div className="flex flex-col">
-                              <span className="font-mono font-bold text-[#091426]">#BRG-8839</span>
-                              <span className="text-[11px] text-[#45474c]">Ada Kartu Identitas</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[#091426]">Dompet Kulit Cokelat</span>
-                            <span className="text-[11px] text-[#45474c]">Dompet & Kartu</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[#091426]">Rian Pratama</span>
-                            <span className="font-mono text-[11px] text-[#45474c]">NIM: 18220012</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2.5 py-1 rounded-lg bg-[#eaedff] text-[#45474c] font-mono text-[11px]">
-                            Rak A-02
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 rounded-full bg-[#dce1ff] text-[#001551] text-[10px] font-bold uppercase">
-                            Ciri Rahasia
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <button
-                            onClick={() => onNavigate('side-by-side', 'INV-2024-0892')}
-                            className="px-3 py-1.5 rounded-lg bg-[#1d4ed8] text-white hover:bg-[#1d4ed8]/90 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer shadow-xs"
-                          >
-                            <span className="material-symbols-outlined text-[15px]">compare</span>
-                            <span>Side-by-Side</span>
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-
-                    {/* Row 3 */}
-                    {(filterType === 'all' || filterType === 'found') && (
-                      <tr className="hover:bg-[#f2f3ff]/60 transition-colors">
-                        <td className="py-3 px-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-11 h-11 rounded-lg bg-[#eaedff] flex items-center justify-center text-[#1d4ed8]">
-                              <span className="material-symbols-outlined text-[22px]">watch</span>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-mono font-bold text-[#091426]">#BRG-8845</span>
-                              <span className="text-[11px] text-[#ba1a1a]">Butuh Tagging</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[#091426]">Jam Tangan Chrono</span>
-                            <span className="text-[11px] text-[#45474c]">Aksesoris Pribadi</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[#091426]">Pak Sugio (Satpam)</span>
-                            <span className="text-[11px] text-[#45474c]">Pelapor Penemu</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2.5 py-1 rounded-lg bg-[#ffdad6] text-[#ba1a1a] font-mono text-[11px]">
-                            Meja Transit Intake
-                          </span>
-                        </td>
-                        <td className="py-3 px-3">
-                          <span className="px-2 py-0.5 rounded-full bg-[#ffdad6] text-[#ba1a1a] text-[10px] font-bold uppercase">
-                            Inspeksi Awal
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 text-right">
-                          <button
-                            onClick={() => alert('Verifikasi fisik barcode intake telah disetujui.')}
-                            className="px-3 py-1.5 rounded-lg bg-[#091426] text-white hover:bg-[#1e293b] text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <span className="material-symbols-outlined text-[15px]">qr_code_scanner</span>
-                            <span>Verifikasi</span>
-                          </button>
-                        </td>
-                      </tr>
+                    ) : (
+                      filteredQueue.map((item) => {
+                        const isClaim = item.status === 'dalam_klaim';
+                        const isReady = item.status === 'siap_ambil';
+                        const isReported = item.status === 'dilaporkan';
+                        return (
+                          <tr key={item.id} className="hover:bg-[#f2f3ff]/60 transition-colors">
+                            <td className="py-3 px-3">
+                              <div className="flex items-center gap-2.5">
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.title}
+                                  className="w-11 h-11 rounded-lg object-cover bg-[#eaedff] shrink-0"
+                                />
+                                <div className="flex flex-col">
+                                  <span className="font-mono font-bold text-[#091426] text-[12px]">
+                                    #{item.id}
+                                  </span>
+                                  {item.claimId && (
+                                    <span className="text-[11px] text-[#1d4ed8] font-mono">
+                                      {item.claimId}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3">
+                              <div className="flex flex-col max-w-[180px]">
+                                <span className="font-bold text-[#091426] truncate">{item.title}</span>
+                                <span className="text-[11px] text-[#45474c] truncate">{item.categoryLabel}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3">
+                              {item.claimantName ? (
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-[#091426]">{item.claimantName}</span>
+                                  <span className="font-mono text-[11px] text-[#45474c]">
+                                    NIM: {item.claimantNim || '-'}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-[#091426]">{item.finderName}</span>
+                                  <span className="text-[11px] text-[#45474c]">{item.finderRole}</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span className="px-2.5 py-1 rounded-lg bg-[#eaedff] text-[#091426] font-mono text-[11px] font-semibold inline-block max-w-[160px] truncate">
+                                {item.storageLocation}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3">
+                              {isReady ? (
+                                <span className="px-2 py-0.5 rounded-full bg-[#6ffbbe] text-[#002113] text-[10px] font-bold uppercase whitespace-nowrap">
+                                  Siap BAST
+                                </span>
+                              ) : isClaim ? (
+                                <span className="px-2 py-0.5 rounded-full bg-[#dce1ff] text-[#001551] text-[10px] font-bold uppercase whitespace-nowrap">
+                                  Audit Klaim
+                                </span>
+                              ) : isReported ? (
+                                <span className="px-2 py-0.5 rounded-full bg-[#ffdad6] text-[#ba1a1a] text-[10px] font-bold uppercase whitespace-nowrap">
+                                  Inspeksi Awal
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-full bg-[#f2f3ff] text-[#1d4ed8] text-[10px] font-bold uppercase whitespace-nowrap">
+                                  Aktif Katalog
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {isReported ? (
+                                  <button
+                                    onClick={() => {
+                                      onVerifyIntake(item.id);
+                                      showToast(`Barang #${item.id} (${item.title}) telah diverifikasi & aktif di katalog.`);
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-[#091426] text-white hover:bg-[#1e293b] text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <span className="material-symbols-outlined text-[15px]">qr_code_scanner</span>
+                                    <span>Verifikasi</span>
+                                  </button>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={() => onNavigate('side-by-side', item.id)}
+                                      className="px-3 py-1.5 rounded-lg bg-[#1d4ed8] text-white hover:bg-[#1d4ed8]/90 text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer shadow-xs"
+                                    >
+                                      <span className="material-symbols-outlined text-[15px]">compare</span>
+                                      <span>Side-by-Side</span>
+                                    </button>
+                                    <button
+                                      onClick={() => onNavigate('bast', item.id)}
+                                      className="px-2.5 py-1.5 rounded-lg bg-[#091426] text-white hover:bg-[#1e293b] text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer"
+                                      title="Buka Berita Acara (BAST)"
+                                    >
+                                      <span className="material-symbols-outlined text-[15px]">description</span>
+                                      {isReady && <span>BAST</span>}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
+
+            {/* Section 1B: Laporan Kehilangan Mahasiswa Masuk */}
+            {filterType !== 'lost' && (
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#eaedff]">
+                <div className="flex flex-wrap items-center justify-between pb-3 border-b border-[#f2f3ff] mb-4 gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#ba1a1a] text-[22px]">
+                      person_search
+                    </span>
+                    <div>
+                      <h3 className="text-[16px] font-bold text-[#091426]">
+                        Laporan Kehilangan Mahasiswa (Masuk Posko)
+                      </h3>
+                      <p className="text-[11px] text-[#45474c]">
+                        Tiket laporan kehilangan dari mahasiswa untuk pencocokan silang dengan barang masuk.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-[#ffdad6] text-[#ba1a1a] text-[11px] font-bold">
+                    {activeLostReports.length} Aktif Dicari
+                  </span>
+                </div>
+
+                {lostReports.length === 0 ? (
+                  <p className="text-[13px] text-[#45474c] py-4 text-center">
+                    Belum ada laporan kehilangan mahasiswa.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {lostReports.slice(0, 4).map((report) => {
+                      const smartMatch = findSmartMatchForReport(report);
+                      return (
+                        <div
+                          key={report.id}
+                          className="p-4 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col gap-2.5"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-[11px] font-bold text-[#1d4ed8]">
+                                  {report.id}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    report.status === 'selesai'
+                                      ? 'bg-[#6ffbbe] text-[#002113]'
+                                      : report.status === 'cocok'
+                                      ? 'bg-[#dce1ff] text-[#001551]'
+                                      : 'bg-[#ffdad6] text-[#ba1a1a]'
+                                  }`}
+                                >
+                                  {report.status === 'selesai'
+                                    ? 'Ditemukan'
+                                    : report.status === 'cocok'
+                                    ? 'Cocok Temuan'
+                                    : 'Menunggu Posko'}
+                                </span>
+                                {smartMatch && report.status === 'menunggu' && (
+                                  <span className="px-2 py-0.5 rounded bg-[#6ffbbe] text-[#002113] text-[10px] font-bold">
+                                    Smart Match: #{smartMatch.id}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="font-bold text-[#091426] text-[14px] mt-1">
+                                {report.title}
+                              </h4>
+                              <p className="text-[12px] text-[#45474c]">
+                                {report.locationLabel || report.location} • {report.contactWa}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {report.status === 'menunggu' && (
+                                <button
+                                  onClick={() => {
+                                    onUpdateLostReportStatus(report.id, 'cocok', smartMatch?.id);
+                                    showToast(
+                                      smartMatch
+                                        ? `Laporan ${report.id} dicocokkan dengan Temuan #${smartMatch.id}.`
+                                        : `Laporan ${report.id} ditandai cocok dengan temuan posko.`
+                                    );
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-[#1d4ed8] text-white text-[11px] font-bold cursor-pointer hover:bg-[#1d4ed8]/90"
+                                >
+                                  {smartMatch ? `Cocokkan (#${smartMatch.id})` : 'Tandai Cocok'}
+                                </button>
+                              )}
+                              {report.status !== 'selesai' && (
+                                <button
+                                  onClick={() => {
+                                    onUpdateLostReportStatus(report.id, 'selesai');
+                                    showToast(`Laporan ${report.id} ditandai selesai/ditemukan.`);
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-[#091426] text-white text-[11px] font-bold cursor-pointer hover:bg-[#1e293b]"
+                                >
+                                  Tandai Ditemukan
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-[11px] text-[#131b2e] bg-white/80 px-3 py-2 rounded-lg border border-[#eaedff]">
+                            <span className="font-bold text-[#1d4ed8]">Ciri Rahasia: </span>
+                            {report.secretClue}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {lostReports.length > 4 && (
+                      <button
+                        onClick={() => setFilterType('lost')}
+                        className="w-full py-2 rounded-xl bg-[#eaedff] hover:bg-[#dae2fd] text-[#091426] text-[12px] font-bold cursor-pointer"
+                      >
+                        Lihat Semua {lostReports.length} Laporan Kehilangan di Tab Antrean
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Section 2: Jadwal Janji Temu Hari Ini */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#eaedff]">
@@ -392,32 +651,41 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                   </h3>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-[#f2f3ff] text-[#1d4ed8] text-[11px] font-bold">
-                  4 Janji Temu Siang Ini
+                  {readyAppointments.length + 1} Janji Temu Aktif
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="font-mono text-[12px] font-bold text-[#1d4ed8]">10:15 WIB</span>
-                      <h4 className="font-bold text-[#091426] text-[14px]">Keys & Remote Keyless Honda</h4>
-                      <p className="text-[12px] text-[#45474c]">Pengambil: Fadhil Ahmad (13219088)</p>
+                {readyAppointments.map((app) => (
+                  <div
+                    key={app.id}
+                    className="p-4 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="font-mono text-[12px] font-bold text-[#1d4ed8]">Siap Diambil</span>
+                        <h4 className="font-bold text-[#091426] text-[14px] truncate">{app.title}</h4>
+                        <p className="text-[12px] text-[#45474c]">
+                          Pengambil: {app.claimantName || 'Mahasiswa'} ({app.claimantNim || 'SSO'})
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded bg-[#6ffbbe] text-[#002113] text-[10px] font-extrabold uppercase shrink-0">
+                        Siap Loket
+                      </span>
                     </div>
-                    <span className="px-2 py-0.5 rounded bg-[#6ffbbe] text-[#002113] text-[10px] font-extrabold uppercase">
-                      Hadir di Loket
-                    </span>
+                    <div className="mt-3 pt-2 border-t border-[#dae2fd] flex items-center justify-between">
+                      <span className="font-mono text-[11px] font-bold">
+                        TIKET: {app.pickupCode || app.claimId || app.id}
+                      </span>
+                      <button
+                        onClick={() => onNavigate('bast', app.id)}
+                        className="px-3 py-1 rounded-lg bg-[#1d4ed8] text-white text-[11px] font-bold cursor-pointer hover:bg-[#1d4ed8]/90"
+                      >
+                        Proses Serah Terima
+                      </button>
+                    </div>
                   </div>
-                  <div className="mt-3 pt-2 border-t border-[#dae2fd] flex items-center justify-between">
-                    <span className="font-mono text-[11px] font-bold">TIKET: QR-K3L-9042</span>
-                    <button
-                      onClick={() => onNavigate('bast')}
-                      className="px-3 py-1 rounded-lg bg-[#1d4ed8] text-white text-[11px] font-bold cursor-pointer hover:bg-[#1d4ed8]/90"
-                    >
-                      Proses Serah Terima
-                    </button>
-                  </div>
-                </div>
+                ))}
 
                 <div className="p-4 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col justify-between">
                   <div className="flex items-start justify-between">
@@ -431,9 +699,9 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                     </span>
                   </div>
                   <div className="mt-3 pt-2 border-t border-[#dae2fd] flex items-center justify-between">
-                    <span className="font-mono text-[11px] font-bold">TIKET: QR-K3L-9049</span>
+                    <span className="font-mono text-[11px] font-bold">TIKET: INV-2024-0876</span>
                     <button
-                      onClick={() => onNavigate('bast')}
+                      onClick={() => onNavigate('bast', 'INV-2024-0876')}
                       className="px-3 py-1 rounded-lg bg-[#091426] text-white text-[11px] font-bold cursor-pointer hover:bg-[#1e293b]"
                     >
                       Buka BAST
@@ -446,7 +714,6 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
 
           {/* Secondary Column (4 Cols): Aksi Cepat & Hot Alert */}
           <aside className="xl:col-span-4 flex flex-col gap-6">
-            {/* Quick Actions */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-[#eaedff] flex flex-col gap-3">
               <div className="flex items-center justify-between pb-2 border-b border-[#f2f3ff]">
                 <span className="text-[15px] font-bold text-[#091426]">Aksi Cepat Posko</span>
@@ -506,7 +773,7 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
                   </div>
                 </div>
                 <span className="px-2 py-0.5 rounded-full bg-[#ffdad6] text-[#ba1a1a] text-[10px] font-bold uppercase">
-                  3 Item Kritis
+                  2 Item Kritis
                 </span>
               </div>
 
@@ -515,50 +782,49 @@ export const CoordinatorDashboardView: React.FC<CoordinatorDashboardViewProps> =
               </p>
 
               <div className="space-y-2">
-                <div className="p-2.5 rounded-xl bg-[#f2f3ff] flex items-center justify-between gap-2 border border-[#eaedff]">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="material-symbols-outlined text-[#1d4ed8]">watch</span>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[12px] font-bold text-[#091426] truncate">
-                        Seiko Presage Automatic
-                      </span>
-                      <span className="text-[10px] font-mono text-[#ba1a1a]">
-                        Tersimpan: 21 Hari (Rak S-01)
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => alert('Notifikasi broadcast Ditmawa disebarkan via email & media sosial kampus!')}
-                    className="px-2.5 py-1 rounded-lg bg-[#eaedff] hover:bg-[#dae2fd] text-[11px] font-bold cursor-pointer"
+                {[
+                  { id: 'alert-seiko', icon: 'watch', name: 'Seiko Presage Automatic', info: 'Tersimpan: 21 Hari (Rak S-01)' },
+                  { id: 'alert-iphone', icon: 'phone_iphone', name: 'iPhone 14 Pro Deep Purple', info: 'Tersimpan: 18 Hari (Loker #01)' },
+                ].map((alertItem) => (
+                  <div
+                    key={alertItem.id}
+                    className="p-2.5 rounded-xl bg-[#f2f3ff] flex items-center justify-between gap-2 border border-[#eaedff]"
                   >
-                    Broadcast
-                  </button>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-[#f2f3ff] flex items-center justify-between gap-2 border border-[#eaedff]">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="material-symbols-outlined text-[#1d4ed8]">phone_iphone</span>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-[12px] font-bold text-[#091426] truncate">
-                        iPhone 14 Pro Deep Purple
-                      </span>
-                      <span className="text-[10px] font-mono text-[#ba1a1a]">
-                        Tersimpan: 18 Hari (Loker #01)
-                      </span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="material-symbols-outlined text-[#1d4ed8]">{alertItem.icon}</span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[12px] font-bold text-[#091426] truncate">
+                          {alertItem.name}
+                        </span>
+                        <span className="text-[10px] font-mono text-[#ba1a1a]">{alertItem.info}</span>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => handleBroadcast(alertItem.id, alertItem.name)}
+                      disabled={broadcastSent[alertItem.id]}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer shrink-0 ${
+                        broadcastSent[alertItem.id]
+                          ? 'bg-[#6ffbbe] text-[#002113]'
+                          : 'bg-[#eaedff] hover:bg-[#dae2fd] text-[#091426]'
+                      }`}
+                    >
+                      {broadcastSent[alertItem.id] ? 'Terkirim' : 'Broadcast'}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => alert('Notifikasi broadcast Ditmawa disebarkan via email & media sosial kampus!')}
-                    className="px-2.5 py-1 rounded-lg bg-[#eaedff] hover:bg-[#dae2fd] text-[11px] font-bold cursor-pointer"
-                  >
-                    Broadcast
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
           </aside>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#091426] text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3">
+          <span className="material-symbols-outlined text-[#6ffbbe] text-[22px]">campaign</span>
+          <span className="text-[13px] font-semibold">{toastMsg}</span>
+        </div>
+      )}
     </div>
   );
 };

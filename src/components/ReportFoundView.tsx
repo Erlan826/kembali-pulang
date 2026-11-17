@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { FoundItem } from '../data/mockData';
+import { FoundItem, UserProfile, getInitials } from '../data/mockData';
 
 interface ReportFoundViewProps {
   onNavigate: (view: string) => void;
   onItemAdded: (newItem: FoundItem) => void;
+  userProfile: UserProfile;
 }
 
 const DEFAULT_CATEGORY_IMAGES: Record<FoundItem['category'], string> = {
@@ -51,6 +52,7 @@ const compressImageFile = (file: File): Promise<string> => {
 export const ReportFoundView: React.FC<ReportFoundViewProps> = ({
   onNavigate,
   onItemAdded,
+  userProfile,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState('');
@@ -110,6 +112,10 @@ export const ReportFoundView: React.FC<ReportFoundViewProps> = ({
     const newId = `INV-${new Date().getFullYear()}-${randomNum}`;
     setCreatedItemId(newId);
 
+    const displayFinder = userProfile.maskPublicName
+      ? `Pelapor ${getInitials(userProfile.name)} (SSO Terverifikasi)`
+      : `${userProfile.name} (NIM: ${userProfile.nim})`;
+
     const newItem: FoundItem = {
       id: newId,
       title: title.trim(),
@@ -133,7 +139,7 @@ export const ReportFoundView: React.FC<ReportFoundViewProps> = ({
           : 'Dibawa Penemu (Siap Hubungi Posko)',
       foundDate: `Hari ini • ${time} WIB`,
       rawDate: `${date}T${time}`,
-      finderName: 'Ahmad Zaki (NIM: 13521098)',
+      finderName: displayFinder,
       finderRole: 'Mahasiswa / Pelapor Jujur',
       imageUrl: uploadedPhotoUrl || DEFAULT_CATEGORY_IMAGES[category],
       imageAlt: title.trim(),
@@ -184,7 +190,9 @@ export const ReportFoundView: React.FC<ReportFoundViewProps> = ({
           </div>
           <div className="flex flex-col text-[12px]">
             <span className="uppercase text-[#45474c] font-bold">Petugas Pelapor</span>
-            <span className="font-bold text-[#091426]">Ahmad Zaki (NIM: 13521098)</span>
+            <span className="font-bold text-[#091426]">
+              {userProfile.name.split(' ').slice(0, 2).join(' ')} (NIM: {userProfile.nim})
+            </span>
             <span className="font-mono text-[#00a472] flex items-center gap-1 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-[#4edea3]"></span>
               SSO Terautentikasi

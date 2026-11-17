@@ -18,9 +18,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
   const [dateFilter, setDateFilter] = useState('all');
 
   const filteredItems = useMemo(() => {
+    const latestTimestamp = items.reduce((max, item) => {
+      const ts = Date.parse(item.rawDate);
+      return Number.isNaN(ts) ? max : Math.max(max, ts);
+    }, 0);
+
     return items.filter((item) => {
       // Search
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.trim().toLowerCase();
       const matchSearch =
         !q ||
         item.title.toLowerCase().includes(q) ||
@@ -36,20 +41,37 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       const matchLocation =
         locationFilter === 'all' ||
         (locationFilter === 'perpus' && item.location.toLowerCase().includes('perpustakaan')) ||
-        (locationFilter === 'gkb' && (item.location.toLowerCase().includes('gkb') || item.location.toLowerCase().includes('gku'))) ||
+        (locationFilter === 'gkb' && (item.location.toLowerCase().includes('gkb') || item.location.toLowerCase().includes('gku') || item.location.toLowerCase().includes('gedung'))) ||
         (locationFilter === 'kantin' && item.location.toLowerCase().includes('kantin')) ||
         (locationFilter === 'lab' && item.location.toLowerCase().includes('lab')) ||
-        (locationFilter === 'parkir' && item.location.toLowerCase().includes('parkir'));
+        (locationFilter === 'parkir' && (item.location.toLowerCase().includes('parkir') || item.location.toLowerCase().includes('gerbang')));
 
-      return matchSearch && matchCategory && matchLocation;
+      // Date filter
+      let matchDate = true;
+      if (dateFilter !== 'all' && latestTimestamp > 0) {
+        const itemTs = Date.parse(item.rawDate);
+        if (!Number.isNaN(itemTs)) {
+          const diffDays = (latestTimestamp - itemTs) / (1000 * 60 * 60 * 24);
+          if (dateFilter === 'today') matchDate = diffDays <= 1;
+          else if (dateFilter === '3days') matchDate = diffDays <= 3;
+          else if (dateFilter === '7days') matchDate = diffDays <= 7;
+          else if (dateFilter === 'month') matchDate = diffDays <= 30;
+        }
+      }
+
+      return matchSearch && matchCategory && matchLocation && matchDate;
     });
-  }, [items, searchQuery, categoryFilter, locationFilter]);
+  }, [items, searchQuery, categoryFilter, locationFilter, dateFilter]);
 
   const resetFilters = () => {
     setSearchQuery('');
     setCategoryFilter('all');
     setLocationFilter('all');
     setDateFilter('all');
+  };
+
+  const scrollToResults = () => {
+    document.getElementById('catalog-results')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -118,14 +140,28 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                 search
               </span>
               <input
-                className="w-full pl-12 pr-32 py-3.5 rounded-xl bg-[#f2f3ff] text-[#131b2e] text-[15px] placeholder:text-[#45474c]/70 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1d4ed8] transition-all shadow-inner"
+                className="w-full pl-12 pr-36 py-3.5 rounded-xl bg-[#f2f3ff] text-[#131b2e] text-[15px] placeholder:text-[#45474c]/70 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#1d4ed8] transition-all shadow-inner"
                 id="searchInput"
                 placeholder="Cari nama barang, nomor seri, atau lokasi penemuan..."
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') scrollToResults();
+                }}
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Hapus pencarian"
+                  className="absolute right-28 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full hover:bg-[#eaedff] text-[#45474c] flex items-center justify-center cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
               <button
+                onClick={scrollToResults}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 px-4 py-2 rounded-lg bg-[#091426] text-white font-semibold text-[13px] flex items-center gap-1.5 hover:bg-[#1e293b] transition-colors cursor-pointer"
                 type="button"
               >
@@ -255,7 +291,7 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
       </section>
 
       {/* Public Catalog Cards Grid */}
-      <main className="w-full py-10">
+      <main id="catalog-results" className="w-full py-10 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -278,20 +314,30 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
               </div>
               <h3 className="text-lg font-bold text-[#091426]">Barang Tidak Ditemukan</h3>
               <p className="text-[14px] text-[#45474c] max-w-md mx-auto mt-1 mb-4">
-                Tidak ada temuan yang cocok dengan kata kunci pencarian Anda. Anda dapat membuat laporan kehilangan baru sekarang.
+                Tidak ada temuan yang cocok dengan kata kunci atau filter Anda. Anda dapat mereset filter atau membuat laporan kehilangan baru.
               </p>
-              <button
-                onClick={() => onNavigate('report-lost')}
-                className="px-5 py-2.5 rounded-xl bg-[#091426] text-white font-semibold text-[13px] hover:bg-[#1e293b] transition-colors cursor-pointer"
-              >
-                Buat Laporan Kehilangan
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <button
+                  onClick={resetFilters}
+                  className="px-5 py-2.5 rounded-xl bg-[#eaedff] text-[#091426] font-semibold text-[13px] hover:bg-[#dae2fd] transition-colors cursor-pointer"
+                >
+                  Reset Filter
+                </button>
+                <button
+                  onClick={() => onNavigate('report-lost')}
+                  className="px-5 py-2.5 rounded-xl bg-[#091426] text-white font-semibold text-[13px] hover:bg-[#1e293b] transition-colors cursor-pointer"
+                >
+                  Buat Laporan Kehilangan
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredItems.map((item) => {
                 const isUnderReview = item.status === 'dalam_klaim';
+                const isReadyPickup = item.status === 'siap_ambil';
                 const isResolved = item.status === 'selesai';
+                const isReportedOnly = item.status === 'dilaporkan';
 
                 return (
                   <article
@@ -308,7 +354,6 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           src={item.imageUrl}
                           onError={(e) => {
-                            // Fallback image placeholder
                             (e.target as HTMLImageElement).src =
                               'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&auto=format&fit=crop&q=80';
                           }}
@@ -321,10 +366,20 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                               <span className="material-symbols-outlined text-[14px]">check_circle</span>
                               Dikembalikan
                             </span>
+                          ) : isReadyPickup ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#091426] text-[#6ffbbe] text-[11px] font-bold uppercase tracking-wider shadow-sm">
+                              <span className="material-symbols-outlined text-[14px]">qr_code_2</span>
+                              Siap Diambil di Posko
+                            </span>
                           ) : isUnderReview ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ba1a1a] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm">
                               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
                               Dalam Proses Klaim
+                            </span>
+                          ) : isReportedOnly ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#45474c] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#d2d9f4]"></span>
+                              Verifikasi Intake
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1d4ed8] text-white text-[11px] font-bold uppercase tracking-wider shadow-sm">
@@ -389,6 +444,14 @@ export const CatalogView: React.FC<CatalogViewProps> = ({
                         >
                           <span className="material-symbols-outlined text-[18px]">done_all</span>
                           <span>Kasus Selesai (Diserahkan)</span>
+                        </button>
+                      ) : isReadyPickup ? (
+                        <button
+                          onClick={() => onNavigate('activity')}
+                          className="w-full py-2.5 px-4 rounded-xl bg-[#091426] text-[#6ffbbe] font-semibold text-[13px] flex items-center justify-center gap-2 hover:bg-[#1e293b] transition-colors cursor-pointer"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
+                          <span>Tiket Siap Diambil ({item.pickupCode || 'Posko'})</span>
                         </button>
                       ) : isUnderReview ? (
                         <button

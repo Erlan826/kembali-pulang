@@ -13,7 +13,7 @@ export const Footer: React.FC = () => {
                 alt="Logo Kembali Pulang Kampus"
                 className="h-8 w-auto object-contain"
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
+                  (e.target as HTMLElement).classList.add('hidden');
                 }}
               />
               <span className="text-[17px] font-bold text-[#091426]">Kembali Pulang</span>

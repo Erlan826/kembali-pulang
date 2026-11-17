@@ -1,33 +1,92 @@
 import React, { useState } from 'react';
-import { INITIAL_USER_PROFILE } from '../data/mockData';
+import { FoundItem, UserProfile, getInitials } from '../data/mockData';
 
 interface ProfileViewProps {
+  userProfile: UserProfile;
+  onUpdateProfile: (profile: UserProfile) => void;
+  foundItems: FoundItem[];
   onNavigate: (view: string) => void;
 }
 
-export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
-  const [profile, setProfile] = useState(INITIAL_USER_PROFILE);
-  const [whatsapp, setWhatsapp] = useState(profile.phone);
-  const [preferredPosko, setPreferredPosko] = useState(profile.preferredPosko);
-  const [maskName, setMaskName] = useState(profile.maskPublicName);
+export const ProfileView: React.FC<ProfileViewProps> = ({
+  userProfile,
+  onUpdateProfile,
+  foundItems,
+  onNavigate,
+}) => {
+  const [whatsapp, setWhatsapp] = useState(userProfile.phone);
+  const [preferredPosko, setPreferredPosko] = useState(userProfile.preferredPosko);
+  const [maskName, setMaskName] = useState(userProfile.maskPublicName);
   const [showSavedFeedback, setShowSavedFeedback] = useState(false);
+  const [botToast, setBotToast] = useState<string | null>(null);
+  const [ssoModalOpen, setSsoModalOpen] = useState(false);
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [passMsg, setPassMsg] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
+
+  const initials = getInitials(userProfile.name);
+  const completedBastItems = foundItems.filter((i) => i.status === 'selesai');
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    setProfile((prev) => ({
-      ...prev,
-      phone: whatsapp,
+    onUpdateProfile({
+      ...userProfile,
+      phone: whatsapp.trim() || userProfile.phone,
       preferredPosko,
       maskPublicName: maskName,
-    }));
+    });
     setShowSavedFeedback(true);
     setTimeout(() => {
       setShowSavedFeedback(false);
-    }, 4000);
+    }, 3500);
+  };
+
+  const handleToggleNotification = (
+    key: keyof UserProfile['notifications'],
+    checked: boolean
+  ) => {
+    onUpdateProfile({
+      ...userProfile,
+      notifications: {
+        ...userProfile.notifications,
+        [key]: checked,
+      },
+    });
+    setBotToast(
+      `Preferensi notifikasi ${
+        key === 'whatsappInstant'
+          ? 'WhatsApp Instan'
+          : key === 'emailSummary'
+          ? 'Ringkasan Email'
+          : 'Peringatan Retensi H-3'
+      } ${checked ? 'diaktifkan' : 'dinonaktifkan'}.`
+    );
+    setTimeout(() => setBotToast(null), 3000);
   };
 
   const handleTestBot = () => {
-    alert(`Permintaan tes notifikasi bot terkirim ke WhatsApp ${whatsapp}! Periksa pesan masuk dalam 30 detik.`);
+    setBotToast(
+      `Tes Bot Kampus terkirim ke WhatsApp ${whatsapp}: "[Kembali Pulang] Uji koneksi notifikasi Smart Match berhasil untuk NIM ${userProfile.nim}."`
+    );
+    setTimeout(() => setBotToast(null), 4500);
+  };
+
+  const handlePasswordChange = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPass.length < 8) {
+      setPassMsg({ type: 'err', text: 'Kata sandi baru minimal 8 karakter.' });
+      return;
+    }
+    if (newPass !== confirmPass) {
+      setPassMsg({ type: 'err', text: 'Konfirmasi kata sandi tidak cocok.' });
+      return;
+    }
+    setPassMsg({
+      type: 'ok',
+      text: 'Kata sandi SSO SIAKAD berhasil diperbarui dan disinkronkan ke seluruh posko.',
+    });
+    setNewPass('');
+    setConfirmPass('');
   };
 
   return (
@@ -43,12 +102,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
             Beranda
           </button>
           <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-          <span className="text-[#131b2e] font-bold">Profil Pengguna & Identitas SSO</span>
+          <span className="text-[#131b2e] font-bold">Profil Pengguna &amp; Identitas SSO</span>
         </nav>
 
-        {/* 1. Header Profil & Kartu Identitas SSO Kampus (Bento Lead) */}
+        {/* 1. Header Profil & Kartu Identitas SSO Kampus */}
         <section className="bg-white rounded-3xl shadow-sm border border-[#eaedff] p-6 md:p-8 flex flex-col gap-6 relative overflow-hidden">
-          {/* Upper Banner Ribbon */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#e2e7ff] text-[#091426] text-[12px] font-bold">
               <span className="material-symbols-outlined text-[18px] text-[#1d4ed8]">verified_user</span>
@@ -56,17 +114,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
             </div>
             <div className="flex items-center gap-2 font-mono text-[12px] text-[#45474c] bg-[#f2f3ff] px-3 py-1 rounded-xl">
               <span className="w-2 h-2 rounded-full bg-[#1d4ed8] animate-pulse"></span>
-              <span>ID SSO: {profile.ssoId}</span>
+              <span>ID SSO: {userProfile.ssoId}</span>
             </div>
           </div>
 
-          {/* Core Profile Identity Row */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-              {/* Avatar */}
               <div className="relative flex-shrink-0">
                 <div className="w-24 h-24 rounded-2xl bg-[#091426] text-white flex items-center justify-center text-3xl font-bold shadow-md ring-4 ring-[#eaedff]">
-                  AZ
+                  {initials}
                 </div>
                 <div className="absolute -bottom-1 -right-1 p-1 bg-white rounded-full shadow">
                   <span className="material-symbols-outlined text-[20px] text-[#00a472]">
@@ -75,22 +131,21 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* Student Metadata */}
               <div className="flex flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl sm:text-3xl font-extrabold text-[#091426] tracking-tight">
-                    {profile.name}
+                    {userProfile.name}
                   </h1>
                   <span className="px-2 py-0.5 rounded bg-[#dce1ff] text-[#001551] text-[11px] font-bold">
                     S1 Reguler
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[#45474c] text-[13px]">
-                  <span className="font-bold text-[#131b2e]">NIM: {profile.nim}</span>
+                  <span className="font-bold text-[#131b2e]">NIM: {userProfile.nim}</span>
                   <span>•</span>
-                  <span>{profile.program}</span>
+                  <span>{userProfile.program}</span>
                   <span>•</span>
-                  <span>{profile.faculty}</span>
+                  <span>{userProfile.faculty}</span>
                 </div>
                 <div className="flex items-center gap-1 text-[#45474c] text-[12px] mt-1">
                   <span className="material-symbols-outlined text-[16px]">domain</span>
@@ -99,7 +154,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Quick Actions */}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => onNavigate('activity')}
@@ -118,9 +172,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* Quick Stats Bento Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-[#f2f3ff]">
-            {/* Stat 1: Integritas Kampus */}
             <div className="p-4 rounded-2xl bg-[#f2f3ff] flex items-center justify-between gap-4 border border-[#eaedff]">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
@@ -128,7 +180,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 </span>
                 <div className="flex items-baseline gap-1 mt-1">
                   <span className="text-3xl font-extrabold text-[#091426]">
-                    {profile.integrityScore}
+                    {userProfile.integrityScore}
                   </span>
                   <span className="text-[13px] text-[#45474c]">/100</span>
                 </div>
@@ -155,7 +207,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                     fill="none"
                     r="15.915"
                     stroke="currentColor"
-                    strokeDasharray="98, 100"
+                    strokeDasharray={`${userProfile.integrityScore}, 100`}
                     strokeLinecap="round"
                     strokeWidth="3.5"
                   />
@@ -166,15 +218,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Stat 2: Temuan Diserahkan */}
             <div className="p-4 rounded-2xl bg-[#f2f3ff] flex items-center justify-between gap-4 border border-[#eaedff]">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
-                  Barang Ditemukan & Pulang
+                  Barang Ditemukan &amp; Pulang
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-3xl font-extrabold text-[#091426]">
-                    {profile.itemsFoundReturned}
+                    {userProfile.itemsFoundReturned}
                   </span>
                   <span className="text-[13px] text-[#45474c]">Insiden Selesai</span>
                 </div>
@@ -187,7 +238,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Stat 3: Milik Pribadi Terselamatkan */}
             <div className="p-4 rounded-2xl bg-[#f2f3ff] flex items-center justify-between gap-4 border border-[#eaedff]">
               <div className="flex flex-col">
                 <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
@@ -195,7 +245,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 </span>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-3xl font-extrabold text-[#091426]">
-                    {profile.itemsPersonalRecovered}
+                    {userProfile.itemsPersonalRecovered}
                   </span>
                   <span className="text-[13px] text-[#45474c]">Laporan Temu</span>
                 </div>
@@ -212,7 +262,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
 
         {/* 2 Columns Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Form Kontak, Lokasi Pengambilan (7 Cols) */}
+          {/* Left Column */}
           <div className="lg:col-span-7 flex flex-col gap-6">
             <section className="bg-white rounded-2xl shadow-sm border border-[#eaedff] p-6 flex flex-col gap-5">
               <div className="flex items-start justify-between gap-3">
@@ -233,7 +283,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
               </div>
 
               <form onSubmit={handleSave} className="flex flex-col gap-4">
-                {/* Nomor WhatsApp */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[13px] font-bold text-[#131b2e]" htmlFor="profileWa">
@@ -265,7 +314,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                {/* Email SSO Locked */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label className="text-[13px] font-bold text-[#131b2e]" htmlFor="profileEmail">
@@ -285,12 +333,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                       id="profileEmail"
                       readOnly
                       type="email"
-                      value={profile.email}
+                      value={userProfile.email}
                     />
                   </div>
                 </div>
 
-                {/* Posko Dropdown */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] font-bold text-[#131b2e]" htmlFor="profilePosko">
                     Posko Pengambilan Default / Terdekat
@@ -324,7 +371,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                {/* Toggle Privasi */}
                 <label className="p-3.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-start gap-3 cursor-pointer select-none">
                   <input
                     checked={maskName}
@@ -345,7 +391,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 {showSavedFeedback && (
                   <div className="p-3 rounded-xl bg-[#6ffbbe]/40 text-[#002113] text-[13px] font-bold flex items-center gap-2 border border-[#4edea3]">
                     <span className="material-symbols-outlined text-[18px]">task_alt</span>
-                    <span>Preferensi kontak berhasil diperbarui ke repositori Kampus!</span>
+                    <span>Preferensi kontak berhasil disimpan permanen ke profil SSO Anda!</span>
                   </div>
                 )}
 
@@ -372,7 +418,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                     Preferensi Notifikasi Pintar (Smart Match)
                   </h2>
                   <p className="text-[12px] text-[#45474c]">
-                    Kelola peringatan kecocokan dan status tiket resmi
+                    Kelola peringatan kecocokan dan status tiket resmi (tersimpan otomatis)
                   </p>
                 </div>
               </div>
@@ -391,7 +437,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                     <p className="text-[12px] text-[#45474c]">Pemberitahuan real-time untuk barang serupa.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                    <input defaultChecked className="sr-only peer" type="checkbox" />
+                    <input
+                      checked={userProfile.notifications.whatsappInstant}
+                      onChange={(e) => handleToggleNotification('whatsappInstant', e.target.checked)}
+                      className="sr-only peer"
+                      type="checkbox"
+                    />
                     <div className="w-11 h-6 bg-[#dae2fd] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1d4ed8]"></div>
                   </label>
                 </div>
@@ -399,12 +450,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 <div className="p-4 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-center justify-between gap-4">
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[13px] font-bold text-[#131b2e]">
-                      Ringkasan Status Tiket & Verifikasi Posko (Email)
+                      Ringkasan Status Tiket &amp; Verifikasi Posko (Email)
                     </span>
                     <p className="text-[12px] text-[#45474c]">Update status pengajuan klaim dan verifikasi.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                    <input defaultChecked className="sr-only peer" type="checkbox" />
+                    <input
+                      checked={userProfile.notifications.emailSummary}
+                      onChange={(e) => handleToggleNotification('emailSummary', e.target.checked)}
+                      className="sr-only peer"
+                      type="checkbox"
+                    />
                     <div className="w-11 h-6 bg-[#dae2fd] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1d4ed8]"></div>
                   </label>
                 </div>
@@ -422,7 +478,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                     <p className="text-[12px] text-[#45474c]">Peringatan H-3 sebelum batas retensi posko berakhir.</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer flex-shrink-0">
-                    <input defaultChecked className="sr-only peer" type="checkbox" />
+                    <input
+                      checked={userProfile.notifications.retentionWarning}
+                      onChange={(e) => handleToggleNotification('retentionWarning', e.target.checked)}
+                      className="sr-only peer"
+                      type="checkbox"
+                    />
                     <div className="w-11 h-6 bg-[#dae2fd] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1d4ed8]"></div>
                   </label>
                 </div>
@@ -430,7 +491,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
             </section>
           </div>
 
-          {/* Right Column: Civic Integrity Badges & Security Audit (5 Cols) */}
+          {/* Right Column */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             <section className="bg-white rounded-2xl shadow-sm border border-[#eaedff] p-6 flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -443,7 +504,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 <span className="text-[12px] text-[#1d4ed8] font-bold">2 Terbuka</span>
               </div>
 
-              {/* Badges */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-4 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col items-center text-center gap-2">
                   <div className="w-12 h-12 rounded-full bg-[#dce1ff] flex items-center justify-center text-[#1d4ed8] shadow-xs">
@@ -452,7 +512,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                   <div>
                     <span className="text-[13px] font-bold text-[#131b2e] block">Penyelamat Emas</span>
                     <span className="text-[11px] text-[#45474c] mt-0.5 block">
-                      3x menyerahkan temuan ke posko.
+                      {userProfile.itemsFoundReturned}x menyerahkan temuan ke posko.
                     </span>
                   </div>
                   <span className="text-[11px] text-[#00a472] font-bold mt-auto">Terverifikasi</span>
@@ -477,6 +537,30 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 <span className="text-[11px] font-bold text-[#45474c] uppercase tracking-wider">
                   Riwayat Pengembalian Selesai (BAST)
                 </span>
+                {completedBastItems.map((bastItem) => (
+                  <div
+                    key={bastItem.id}
+                    className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#1d4ed8] shadow-xs shrink-0">
+                        <span className="material-symbols-outlined text-[20px]">verified</span>
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[13px] font-bold text-[#131b2e] block truncate">
+                          {bastItem.title}
+                        </span>
+                        <span className="text-[11px] text-[#45474c] block truncate">
+                          {bastItem.bastNumber || `BAST-${bastItem.id}`} • {bastItem.bastDate || bastItem.foundDate}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-[#6ffbbe] text-[#002113] text-[10px] font-extrabold uppercase shrink-0">
+                      Tuntas
+                    </span>
+                  </div>
+                ))}
+
                 <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#1d4ed8] shadow-xs">
@@ -485,21 +569,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                     <div>
                       <span className="text-[13px] font-bold text-[#131b2e] block">MacBook Air M1 Silver</span>
                       <span className="text-[11px] text-[#45474c]">BAST: #BAST-2024-0891 • 14 Feb 2024</span>
-                    </div>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-[#6ffbbe] text-[#002113] text-[10px] font-extrabold uppercase">
-                    Tuntas
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center text-[#1d4ed8] shadow-xs">
-                      <span className="material-symbols-outlined text-[20px]">wallet</span>
-                    </div>
-                    <div>
-                      <span className="text-[13px] font-bold text-[#131b2e] block">Dompet Kulit Cokelat</span>
-                      <span className="text-[11px] text-[#45474c]">BAST: #BAST-2024-0342 • 28 Jan 2024</span>
                     </div>
                   </div>
                   <span className="px-2 py-0.5 rounded bg-[#6ffbbe] text-[#002113] text-[10px] font-extrabold uppercase">
@@ -515,35 +584,38 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
                 <div className="w-8 h-8 rounded-lg bg-[#e2e7ff] text-[#091426] flex items-center justify-center">
                   <span className="material-symbols-outlined text-[18px]">security</span>
                 </div>
-                <h2 className="text-[16px] font-bold text-[#091426]">Keamanan Sesi & Autentikasi</h2>
+                <h2 className="text-[16px] font-bold text-[#091426]">Keamanan Sesi &amp; Autentikasi</h2>
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#1d4ed8]"></span>
-                    <span className="text-[13px] font-bold text-[#131b2e]">Google Chrome • macOS</span>
+                    <span className="text-[13px] font-bold text-[#131b2e]">Sesi Browser Aktif</span>
                   </div>
                   <span className="text-[11px] font-bold text-[#1d4ed8]">Aktif Sekarang</span>
                 </div>
                 <div className="flex items-center gap-2 text-[12px] text-[#45474c] pl-4">
                   <span className="font-mono">IP: 10.240.18.92</span>
                   <span>•</span>
-                  <span>Lokasi: Gedung Lab Terpadu</span>
+                  <span>Lokasi: Jaringan Kampus Eduroam</span>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => alert('Membuka portal layanan keamanan SIAKAD terpadu...')}
+                  onClick={() => {
+                    setPassMsg(null);
+                    setSsoModalOpen(true);
+                  }}
                   className="w-full inline-flex items-center justify-between px-4 py-2.5 bg-[#f2f3ff] hover:bg-[#e2e7ff] text-[#131b2e] rounded-xl text-[13px] font-bold transition-colors cursor-pointer border border-[#eaedff]"
                 >
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-[18px] text-[#1d4ed8]">password</span>
                     <span>Kelola Kata Sandi SSO di Portal Terpadu</span>
                   </div>
-                  <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                  <span className="material-symbols-outlined text-[16px]">tune</span>
                 </button>
 
                 <button
@@ -559,6 +631,92 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* Password & Security Modal */}
+      {ssoModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#091426]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white max-w-md w-full rounded-2xl p-6 shadow-2xl border border-[#eaedff] space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#f2f3ff]">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[#1d4ed8]">lock_reset</span>
+                <h3 className="text-[16px] font-bold text-[#091426]">Keamanan Kata Sandi SSO</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSsoModalOpen(false)}
+                className="text-[#45474c] hover:text-[#091426] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handlePasswordChange} className="space-y-3">
+              <div>
+                <label className="block text-[12px] font-bold text-[#131b2e] mb-1">
+                  Kata Sandi Baru SSO
+                </label>
+                <input
+                  type="password"
+                  value={newPass}
+                  onChange={(e) => setNewPass(e.target.value)}
+                  placeholder="Minimal 8 karakter"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] text-[13px] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[12px] font-bold text-[#131b2e] mb-1">
+                  Ulangi Kata Sandi Baru
+                </label>
+                <input
+                  type="password"
+                  value={confirmPass}
+                  onChange={(e) => setConfirmPass(e.target.value)}
+                  placeholder="Konfirmasi kata sandi"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#f2f3ff] border border-[#eaedff] text-[13px] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  required
+                />
+              </div>
+
+              {passMsg && (
+                <div
+                  className={`p-3 rounded-xl text-[12px] font-bold ${
+                    passMsg.type === 'ok'
+                      ? 'bg-[#6ffbbe]/40 text-[#002113]'
+                      : 'bg-[#ffdad6] text-[#ba1a1a]'
+                  }`}
+                >
+                  {passMsg.text}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSsoModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-[13px] font-bold text-[#45474c] hover:bg-[#f2f3ff] cursor-pointer"
+                >
+                  Tutup
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-[#091426] text-white text-[13px] font-bold hover:bg-[#1d4ed8] cursor-pointer"
+                >
+                  Perbarui Sandi
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Bot / Notification Toast */}
+      {botToast && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#091426] text-white p-4 rounded-2xl shadow-2xl flex items-start gap-3">
+          <span className="material-symbols-outlined text-[#6ffbbe] text-[22px]">mark_chat_read</span>
+          <span className="text-[12.5px] leading-relaxed">{botToast}</span>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { UserProfile, getInitials } from '../data/mockData';
 
 interface NavbarProps {
   currentView: string;
@@ -6,6 +7,7 @@ interface NavbarProps {
   activeRole: 'mahasiswa' | 'koordinator' | 'admin';
   onChangeRole: (role: 'mahasiswa' | 'koordinator' | 'admin') => void;
   claimCount: number;
+  userProfile: UserProfile;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -13,7 +15,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigate,
   activeRole,
   onChangeRole,
-  claimCount
+  claimCount,
+  userProfile
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -49,6 +52,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'profile', label: 'Profil SSO', icon: 'account_circle', matchViews: ['profile'] }
   ];
 
+  const shortStudentName = userProfile.name.split(' ').slice(0, 2).join(' ');
+  const studentInitials = getInitials(userProfile.name);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-[#eaedff] shadow-sm">
       <div className="h-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
@@ -63,7 +69,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               alt="Logo Kembali Pulang"
               className="w-9 h-9 object-contain rounded-xl shadow-sm shrink-0"
               onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none';
+                (e.target as HTMLElement).classList.add('hidden');
               }}
             />
             <div className="flex flex-col">
@@ -165,7 +171,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="relative w-9 h-9 flex items-center justify-center rounded-full text-[#45474c] hover:bg-[#f2f3ff] hover:text-[#091426] transition-colors cursor-pointer shrink-0"
           >
             <span className="material-symbols-outlined text-[21px]">notifications</span>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ba1a1a] ring-2 ring-white" />
+            {claimCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ba1a1a] ring-2 ring-white" />
+            )}
           </button>
 
           {/* User Profile dropdown */}
@@ -178,14 +186,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <div className="hidden xl:flex flex-col text-right whitespace-nowrap">
                 <span className="text-[13px] font-bold text-[#091426] leading-tight">
-                  {activeRole === 'mahasiswa' ? 'Ahmad Zaki' : 'Drs. H. Sudirman, M.Si'}
+                  {activeRole === 'mahasiswa' ? shortStudentName : 'Drs. H. Sudirman, M.Si'}
                 </span>
                 <span className="text-[11px] text-[#45474c] leading-tight mt-0.5">
-                  {activeRole === 'mahasiswa' ? 'NIM: 13521098' : 'Koordinator K3L'}
+                  {activeRole === 'mahasiswa' ? `NIM: ${userProfile.nim}` : 'Koordinator K3L'}
                 </span>
               </div>
               <div className="w-9 h-9 rounded-full bg-[#091426] text-white flex items-center justify-center font-bold text-[12px] shadow-sm shrink-0">
-                {activeRole === 'mahasiswa' ? 'AZ' : 'SD'}
+                {activeRole === 'mahasiswa' ? studentInitials : 'SD'}
               </div>
             </button>
 
@@ -194,10 +202,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-xl border border-[#eaedff] py-2 z-50 text-[13px]">
                 <div className="px-4 py-2.5 border-b border-[#eaedff]">
                   <p className="font-bold text-[#091426]">
-                    {activeRole === 'mahasiswa' ? 'Ahmad Zaki Pratama' : 'Drs. H. Sudirman, M.Si'}
+                    {activeRole === 'mahasiswa' ? userProfile.name : 'Drs. H. Sudirman, M.Si'}
                   </p>
                   <p className="text-[12px] text-[#45474c]">
-                    {activeRole === 'mahasiswa' ? '13521098@std.stei.ac.id' : 'k3l.pusat@kampus.ac.id'}
+                    {activeRole === 'mahasiswa' ? userProfile.email : 'k3l.pusat@kampus.ac.id'}
                   </p>
                   <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-[#dce1ff] text-[#001551]">
                     <span className="material-symbols-outlined text-[12px] text-[#00a472]">verified_user</span>
