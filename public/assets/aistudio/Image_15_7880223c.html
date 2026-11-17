@@ -1,0 +1,580 @@
+<!DOCTYPE html><html class="light" lang="id"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "secondary": "#1d4ed8", "on-primary-fixed-variant": "#3c475a", "on-tertiary": "#ffffff", "inverse-surface": "#283044", "on-error": "#ffffff", "primary-container": "#1e293b", "error": "#ba1a1a", "surface-container-lowest": "#ffffff", "background": "#faf8ff", "on-surface-variant": "#45474c", "on-primary-container": "#8590a6", "error-container": "#ffdad6", "secondary-fixed-dim": "#b7c4ff", "secondary-fixed": "#dce1ff", "secondary-container": "#4069f2", "surface-dim": "#d2d9f4", "surface-container-low": "#f2f3ff", "on-tertiary-fixed-variant": "#005236", "on-primary": "#ffffff", "on-primary-fixed": "#111c2d", "tertiary-fixed-dim": "#4edea3", "on-background": "#131b2e", "tertiary-container": "#00301e", "on-error-container": "#93000a", "surface-container-highest": "#dae2fd", "on-secondary-container": "#fffbff", "surface-container-high": "#e2e7ff", "primary-fixed": "#d8e3fb", "surface": "#faf8ff", "primary-fixed-dim": "#bcc7de", "tertiary": "#00190e", "surface-bright": "#faf8ff", "surface-container": "#eaedff", "primary": "#091426", "on-tertiary-fixed": "#002113", "outline": "#75777d", "outline-variant": "#c5c6cd", "inverse-primary": "#bcc7de", "surface-variant": "#dae2fd", "on-surface": "#131b2e", "on-secondary-fixed": "#001551", "surface-tint": "#545f73", "tertiary-fixed": "#6ffbbe", "on-secondary": "#ffffff", "on-secondary-fixed-variant": "#0039b5", "inverse-on-surface": "#eef0ff", "on-tertiary-container": "#00a472" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xl": "2.5rem", "margin": "2rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter-mobile": "0.75rem", "space-lg": "1.5rem", "margin-mobile": "1rem", "gutter": "1.5rem", "space-md": "1rem" }, "fontFamily": { "headline-xl": ["Plus Jakarta Sans"], "headline-xl-mobile": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "label-md": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "label-lg": ["Plus Jakarta Sans"], "code-num": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"] }, "fontSize": { "headline-xl": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-xl-mobile": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }], "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600" }], "code-num": ["13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }], "headline-lg-mobile": ["22px", { "lineHeight": "30px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }] } } } }</script></head><body class="bg-surface font-body-md text-on-surface antialiased min-h-screen"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest backdrop-blur-md shadow-sm border-b border-surface-container"><div class="h-20 w-full px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md flex-shrink-0"><div class="flex items-center gap-space-sm"><img src="https://lh3.googleusercontent.com/aida/ALJJyrAA9-ouVo4gFNVMXBaYv77c-QkqirgOGKz8OfL3Gkqv0SSaNmx545EM1lUX1b622C2YhZrNk8PX3sCE3oNG9VmZRPEFxECwWnrZzXjPb3L54m3ZJLlNniLDbHHAb0mP8uBRcQgTqjBG9LBDUlWbytpeRz4JBKtOCnHBj_GKEUKJq0tHCWJ7oSmRDfByjQEhOCwK3BYC1TvyVXqXrqwYN6_1nLX_fLciRsF-nD8DWr4Y" alt="Logo Kembali Pulang" class="w-10 h-10 object-contain rounded-xl shadow-sm"><div class="flex flex-col flex-shrink-0"><span class="font-headline-sm text-headline-sm text-primary leading-tight tracking-tight">Kembali Pulang</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Portal Otoritas &amp; Pengawas</span></div></div><div class="hidden md:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-high text-on-surface flex-shrink-0"><span class="material-symbols-outlined text-[15px] text-secondary">shield_person</span><span class="font-label-sm text-label-sm text-on-surface font-semibold">Otoritas Resmi Kampus</span></div></div><div class="hidden lg:flex items-center gap-space-xs p-1 rounded-xl bg-surface-container-low flex-shrink-0"><a class="px-space-sm py-1 rounded-lg font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" href="#">Mode Mahasiswa</a><span class="px-space-sm py-1 rounded-lg font-label-sm text-label-sm bg-surface-container-highest text-on-surface font-bold">Panel Otoritas</span></div><div class="flex items-center gap-space-md flex-shrink-0"><button aria-label="Notifikasi Operasional" class="relative p-space-xs rounded-full text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors flex-shrink-0" type="button"><span class="material-symbols-outlined">notifications</span><span class="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-secondary ring-2 ring-surface"></span></button><div class="flex items-center gap-space-sm pl-space-xs flex-shrink-0"><div class="hidden sm:flex flex-col text-right"><span class="font-label-md text-label-md text-on-surface font-semibold leading-none">Drs. H. Sudirman, M.Si</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-none mt-1">Koordinator K3L &amp; Kemahasiswaan</span></div><img alt="Foto Koordinator" class="w-10 h-10 rounded-full object-cover ring-1 ring-surface-container-highest flex-shrink-0" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs1hRZK6TorrBl6dEXP7kxDyVSzuZGBvIRZs62ExEoDQogC1Os48et4DFy0K6Z0Xamu_iirklfoRJGBk3u-8YLAyDLR1k-hvLFNd6lIHbcTgroGPNnEFpYgnakPzc69LKpjUdUFT-fxEqmKIs7dUyLHA9VhyTmP5rLWe4PJGYOyNwBP7bDAx6ELoV8ZdQ7dBNlCSQGdCWPIalQLGagyRLuo1vB5UMIPLt6NOXK7yg"></div></div></div></header><div class="flex"><aside class="w-64 fixed left-0 top-20 bottom-0 bg-surface-container-low overflow-y-auto z-40 p-space-md flex flex-col justify-between"><div class="space-y-space-md"><div class="px-space-sm py-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">Navigasi Operasional</span></div><nav class="space-y-1" data-active-classes="bg-surface-container-highest text-on-surface font-bold rounded-lg shadow-sm"><a class="w-full flex items-center px-space-md py-space-sm font-label-md text-label-md rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard-koordinator" href="#">Dashboard Koordinator</a><a aria-current="page" class="w-full flex items-center px-space-md py-space-sm transition-colors bg-surface-container-highest text-on-surface font-bold rounded-lg shadow-sm" data-path="antrean-validasi-klaim-side-by-side" href="#">Validasi Klaim Side-by-Side</a><a class="w-full flex items-center px-space-md py-space-sm font-label-md text-label-md rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="modul-serah-terima-barang" href="#">Serah Terima Barang</a><a class="w-full flex items-center px-space-md py-space-sm font-label-md text-label-md rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard-administrator-&amp;-analytics" href="#">Admin &amp; Analytics</a></nav></div><div class="p-space-sm rounded-xl bg-surface-container space-y-space-xs"><div class="flex items-center gap-space-xs text-on-surface"><span class="material-symbols-outlined text-[18px] text-tertiary-container">hub</span><span class="font-label-sm text-label-sm font-semibold">Posko K3L Utama</span></div><p class="font-body-sm text-body-sm text-on-surface-variant">Sesi Aktif: Gedung Rektorat Lt. 1</p></div></aside><main class="w-full pl-64 pt-20 bg-surface min-h-[calc(100vh-5rem)]"><div class="flex flex-col w-full">
+<!-- Top Progress & Case Overview Bar -->
+<section class="w-full px-margin py-space-md bg-surface-container-lowest shadow-sm">
+<div class="flex flex-col gap-space-sm max-w-[1600px] mx-auto">
+<!-- Breadcrumb & Status Badges -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<nav aria-label="Breadcrumb" class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<span class="hover:text-secondary cursor-pointer">Dashboard Koordinator</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-secondary cursor-pointer">Antrean Klaim</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Validasi Kasus #CLM-9032</span>
+<span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-surface font-code-num text-code-num text-[11px]">Ref: #INV-2024-0891</span>
+</nav>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="">Antrean Validasi Manual</span>
+</div>
+<div class="flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container text-on-surface font-code-num text-code-num">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">schedule</span>
+<span class="">SLA: 03:42:10 Tersisa</span>
+</div>
+</div>
+</div>
+<!-- Main Case Title with AI Confidence Gauge -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pt-space-xs">
+<div class="space-y-1">
+<div class="flex items-center gap-space-sm flex-wrap">
+<h1 class="font-headline-lg text-headline-lg text-primary tracking-tight">
+              MacBook Air M2 Space Grey 13-inch
+            </h1>
+<span class="px-2.5 py-0.5 rounded-md bg-secondary text-on-secondary font-label-sm text-label-sm">
+              Elektronik Berharga Tinggi
+            </span>
+</div>
+<div class="flex items-center gap-space-md text-on-surface-variant font-body-sm text-body-sm flex-wrap">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">location_on</span>
+              Perpustakaan Pusat — Meja Baca Lt. 2 (Meja 14)
+            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span>
+              Locker Penyimpanan Fisik: <strong class="text-on-surface font-semibold">L-12 (Gedung Rektorat Lt. 1)</strong>
+</span>
+</div>
+</div>
+<!-- AI Semantic Matching Score Pill Widget -->
+<div class="flex items-center gap-space-md p-space-sm rounded-xl bg-surface-container-low shadow-sm flex-shrink-0">
+<div class="relative w-12 h-12 flex items-center justify-center">
+<svg class="w-12 h-12 transform -rotate-90" viewBox="0 0 36 36">
+<path class="text-surface-container-highest" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3.5"></path>
+<path class="text-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="88, 100" stroke-linecap="round" stroke-width="3.5"></path>
+</svg>
+<span class="absolute font-headline-sm text-headline-sm text-primary font-bold">88%</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label-md text-label-md text-primary font-bold">Kesesuaian Ciri AI: Sangat Tinggi</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">3 dari 3 kunci deskriptor semantik cocok identik</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Side-by-Side Verification Core Canvas -->
+<div class="w-full px-margin py-space-lg max-w-[1600px] mx-auto space-y-space-lg">
+<!-- Edge-to-Edge Sync Comparison Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+<!-- LEFT COLUMN: Source of Truth (Field Curator & Finder Data) -->
+<section class="flex flex-col rounded-xl bg-surface-container-low shadow-sm overflow-hidden">
+<!-- Header Banner Left -->
+<div class="p-space-md bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Source of Truth</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Data Fisik Petugas &amp; Penemu</h2>
+</div>
+</div>
+<span class="px-space-sm py-1 rounded-full bg-surface-container-highest text-on-surface font-code-num text-code-num text-xs font-semibold">
+            TERKUNCI #L-12
+          </span>
+</div>
+<div class="p-space-md space-y-space-md flex-1">
+<!-- Curator & Intake Metadata Panel -->
+<div class="grid grid-cols-2 gap-space-sm p-space-sm rounded-xl bg-surface-container-lowest shadow-sm text-body-sm font-body-sm">
+<div>
+<span class="text-on-surface-variant text-[11px] block font-semibold uppercase">Pelapor Penemu</span>
+<span class="text-on-surface font-semibold flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">badge</span>
+                Rizky Pratama
+              </span>
+<span class="text-on-surface-variant text-[11px]">CS Perpustakaan Pusat (Reg #8821)</span>
+</div>
+<div>
+<span class="text-on-surface-variant text-[11px] block font-semibold uppercase">Waktu Serah Fisik</span>
+<span class="text-on-surface font-semibold flex items-center gap-1 mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">event_available</span>
+                24 Okt 2024
+              </span>
+<span class="text-on-surface-variant text-[11px]">Pukul 09:30 WIB di Posko Rektorat</span>
+</div>
+</div>
+<!-- Physical Inspection Images (Posko Curated Photos) -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Dokumentasi Fisik Petugas Posko (4 Foto)</span>
+<span class="font-label-sm text-label-sm text-secondary flex items-center gap-0.5 cursor-pointer">
+                Perbesar Grid <span class="material-symbols-outlined text-[14px]">open_in_full</span>
+</span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="relative group rounded-xl overflow-hidden shadow-sm aspect-video bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="MacBook Air M2 closed lid on university administrative desk, showing space grey aluminum surface with institutional numbered property intake card nearby, natural overhead office lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBsuh58I7QHaCFeXjmM2BYwXCu_rrFv68-mS7003tittSpEBltMjzS1kJsoH2urAUJ1694C5SIxy_Dj_TQe4Gp3oZWMm3ri1c01ns9W-bxadVisJx5QB8At-7wEHx7TqeTsBsyDS_tKlk8Mxv4LbV-dKRJgG47zNyY01X5wwM0Q8fCOkY3OQkghtD8BAo55gA5YLnv_A2DBSuYBkKvPSIA0mg1jd0ctTS_MldqKB-s">
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-primary/80 backdrop-blur-sm text-on-primary font-code-num text-code-num text-[10px]">
+                  Fisik Depan Casing
+                </span>
+</div>
+<div class="relative group rounded-xl overflow-hidden shadow-sm aspect-video bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Macro close-up photograph of the bottom corner of a space grey laptop, revealing a miniature worn black and white Octocat sticker adhered precisely near the rubber foot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe-PGHU3sFiddrwp7zh73EPH7G5QVZ-2oEuXsPn_nVV_oXZ1gGguNHHAdststcNTsxFORwrBbKckukcU8PWtanBaOxcayoxx36Vt0MlG95RC9oxbk-aN7lGvzN1SbUeoOkKaAbfbeSf-OjDNmqjzEd24LbNCMJvNf4Sklm3m6AASf-QI5A1oNV8E4I6avn4Yy7NOEtelvboNdI-1pn66HOrlJyBwwTND8Gp7D4BuI">
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-primary/80 backdrop-blur-sm text-on-primary font-code-num text-code-num text-[10px]">
+                  Ciri Rahasia #1 (Stiker)
+                </span>
+<span class="absolute top-2 right-2 p-1 rounded-full bg-secondary text-on-secondary">
+<span class="material-symbols-outlined text-[12px]">visibility</span>
+</span>
+</div>
+<div class="relative group rounded-xl overflow-hidden shadow-sm aspect-video bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Laptop display lit up showing MacOS lock screen with wallpaper of an orange tabby cat wearing a graduation cap, photographed under crisp library lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNRkb0YGUW9uGbZv9fsvQWcMXsx17tt1dYdp-rmCThHcjQQi2ILjDHCZzqxTwjqKYaqEz92bkBheXeivjvYIgdLNyWwsfwSvyzk6pLR4mVdmHO2TNjqncsH3lcWV1T9ui2OpyqBm5TkXmNYLpjf78n3rJBiv5NQ1GlGOvg5b94405_hNWM6ayHI01ENPrlO0GwDkyGInVMe260HLCDjFd7oLHTD2cihrCagSbzxL8">
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-primary/80 backdrop-blur-sm text-on-primary font-code-num text-code-num text-[10px]">
+                  Layar Kunci Menyala
+                </span>
+</div>
+<div class="relative group rounded-xl overflow-hidden shadow-sm aspect-video bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Macro detail of display hinge edge showing very subtle hairline micro-crack mark on black rubber gasket protector, clean sharp forensic documentation photograph." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBU9Nl6ktbWTaXvNRBoHZ8_dSTRb_ybnkQaOtoAJEujCAX79Kw7V9Mge8gF6cD7nwUlm8FssdNje-2KJzi41cJy9BQc8kVmfAZWtHqKnJwvoLnernqQZ4i4Kl0ctLfEoQmJV8vh4AlIH2ZBwiVsvCTDI_D17fD5ZiqKnsVs7oGw4HVuNT8ksDBShyn_jJxxzhSptJhhSPo7OQrQUrCH2qFe6nGIHf4gc13iMtVFkw">
+<span class="absolute bottom-2 left-2 px-1.5 py-0.5 rounded bg-primary/80 backdrop-blur-sm text-on-primary font-code-num text-code-num text-[10px]">
+                  Engsel Bumper Mikro
+                </span>
+</div>
+</div>
+</div>
+<!-- Secret Intrinsic Indicators (Redacted until coordinator review) -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">lock</span>
+                Ciri Rahasia Fisik Tercatat (Kurator K3L)
+              </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">4 Butir Terverifikasi</span>
+</div>
+<div class="space-y-2">
+<!-- Item 1 -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  1
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Stiker GitHub di Casing Belakang</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-code-num text-[10px]">Posisi: Sudut Kiri Bawah</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    "Ada stiker GitHub Octocat kecil warna monokrom di sudut kiri bawah casing belakang perangkat."
+                  </p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  2
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Digit Serial Number Terdaftar</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-code-num text-[10px]">Laser Engraving</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    "Serial number pada bagian chasis belakang berakhiran <span class="font-code-num font-bold text-on-surface">...782X</span> (Daftar lengkap: C02GN0...782X)."
+                  </p>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  3
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Wallpaper Layar Kunci</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-code-num text-[10px]">Tampilan Visual</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    "Wallpaper layar menampilkan foto kucing bulu oranye mengenakan topi toga sarjana universitas."
+                  </p>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="p-space-sm rounded-xl bg-surface-container-lowest shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-surface-container-high text-on-surface flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  4
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Cacat Fisik Spesifik (Kerusakan Minor)</span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container text-on-surface font-code-num text-[10px]">Wear &amp; Tear</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                    "Terdapat retak mikro sepanjang 2mm di karet bumper pelindung engsel layar sebelah kanan."
+                  </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: Claimant Submission (Student Inputs & Evidence) -->
+<section class="flex flex-col rounded-xl bg-surface-container-lowest shadow-sm overflow-hidden">
+<!-- Header Banner Right -->
+<div class="p-space-md bg-secondary text-on-secondary flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container-lowest text-secondary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[18px]">how_to_reg</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-on-secondary/80 uppercase tracking-wider block">Pengajuan Mahasiswa</span>
+<h2 class="font-headline-sm text-headline-sm text-on-secondary">Jawaban &amp; Dokumen Pengklaim</h2>
+</div>
+</div>
+<div class="flex items-center gap-1 px-space-sm py-1 rounded-full bg-on-secondary/20 text-on-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">shield</span>
+<span class="">SSO ITB Terverifikasi</span>
+</div>
+</div>
+<div class="p-space-md space-y-space-md flex-1">
+<!-- Claimant Profile Header -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-surface-container-highest flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="Formal academic student portrait of a Southeast Asian male university student with polite neutral expression wearing a collared campus shirt against a clean studio backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2rbkRQmDvB8lUW3YiaQrJEZCN5NUzakEDy-kd5Hrqd3XUPGL6FktnbN4GM5dJ4-Z7Pcf8FAfLJ6bYOEfydrkP_IS7FhUBwbfWfzpTcjviMsspeNBQCALdSZd2bt9OSDKFOYj296hRrffgvVL6AUzFlA1TLWfY43lh1_QCILQHpJcjtcrhco15q-Q36CpTJX4DFLVe4KqDmX7Rg8ikGY026iokDVWpGcfVjAdMIjo">
+</div>
+<div>
+<div class="flex items-center gap-1.5">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Ahmad Zaki Al-Farisi</h3>
+<span class="material-symbols-outlined text-[16px] text-secondary" title="Akun SSO Valid">verified</span>
+</div>
+<div class="flex items-center gap-space-sm font-body-sm text-body-sm text-on-surface-variant flex-wrap">
+<span class="font-code-num font-semibold text-on-surface">NIM 13521098</span>
+<span class="">•</span>
+<span class="">Teknik Informatika (2021)</span>
+<span class="">•</span>
+<span class="text-secondary font-semibold">0812-4491-XXXX</span>
+</div>
+</div>
+</div>
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-highest text-on-surface font-label-sm text-label-sm hover:bg-surface-container transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">contacts</span>
+<span class="">Profil SSO</span>
+</button>
+</div>
+<!-- Matching Answers submitted by student -->
+<div class="space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">psychology_alt</span>
+                Jawaban Formulir Ciri Rahasia Mandiri
+              </span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+                Disubmit 24 Okt, 11:15 WIB
+              </span>
+</div>
+<div class="space-y-2">
+<!-- Comparison Point 1 -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  1
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Pernyataan Ciri Stiker</span>
+<span class="flex items-center gap-1 text-on-tertiary-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+                      Cocok Identik
+                    </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 bg-surface-container-lowest p-2 rounded-lg">
+                    “Di balik laptop ada stiker octocat GitHub warna hitam putih kecil di bagian pojok kiri bawah, agak sedikit terkelupas ujungnya.”
+                  </p>
+</div>
+</div>
+<!-- Comparison Point 2 -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  2
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Pernyataan Tampilan Layar</span>
+<span class="flex items-center gap-1 text-on-tertiary-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+                      Cocok Identik
+                    </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 bg-surface-container-lowest p-2 rounded-lg">
+                    “Wallpaper saya pakai foto kucing oren peliharaan saya (namanya Milo) pakai toga wisuda mini.”
+                  </p>
+</div>
+</div>
+<!-- Comparison Point 3 -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm flex items-start gap-space-sm">
+<div class="w-6 h-6 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-code-num text-xs font-bold flex-shrink-0 mt-0.5">
+                  3
+                </div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Keterangan Aksesori &amp; Kondisi</span>
+<span class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px]">info</span>
+                      Informasi Tambahan
+                    </span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5 bg-surface-container-lowest p-2 rounded-lg">
+                    “Kabel charger kepala adapter 30W sedikit lecet di dekat colokan type-C, dan karet engsel ada bekas baret halus.”
+                  </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Submitted Evidentiary Uploads -->
+<div class="space-y-space-xs">
+<span class="font-label-md text-label-md text-on-surface block">Bukti Kepemilikan Faktual Terlampir</span>
+<div class="grid grid-cols-3 gap-space-sm">
+<!-- Evidence 1: Official Invoice PDF -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between cursor-pointer group">
+<div class="flex items-start justify-between">
+<span class="material-symbols-outlined text-[28px] text-error">picture_as_pdf</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest font-code-num text-[10px] text-on-surface">PDF • 1.2 MB</span>
+</div>
+<div class="mt-2">
+<span class="font-label-sm text-label-sm text-on-surface group-hover:text-secondary block font-bold truncate">Invoice_iBox_Resmi.pdf</span>
+<span class="text-on-surface-variant text-[11px] block mt-0.5">Serial: C02GN0...782X</span>
+</div>
+<div class="mt-2 pt-2 flex items-center justify-between text-[11px] text-secondary font-semibold">
+<span class="">Pratinjau Dokumen</span>
+<span class="material-symbols-outlined text-[14px]">visibility</span>
+</div>
+</div>
+<!-- Evidence 2: iCloud Find My Snapshot -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between cursor-pointer group">
+<div class="relative h-16 w-full rounded-lg overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Digital screenshot of Apple Find My device interface displaying MacBook Air M2 owned by Ahmad Zaki with matched serial number registered to campus Apple ID." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC9syek87xxzPuKhub761sN5gno846KniJlQnYjLtAahb6Vg-j0ng1o-TzLB4aGV9tKiS6G0DQJVOKr2MBdGozeSzzkxUTQ4vog2hS_Ay87uJ4VohB-z5kmJqXpztkIuHw0DxoS3I4SSEx8Zxzmd-Xa9E5SeIZ7O5pmx-r9Izf-g0Y_vD9iBU1rDrNrVugbQV3-pdgZbRWqXIa_YM2uq6baPFyif8O3bNnykDF_ar8">
+<span class="absolute top-1 right-1 px-1 rounded bg-primary/70 text-on-primary font-code-num text-[9px]">iCloud</span>
+</div>
+<div class="mt-2">
+<span class="font-label-sm text-label-sm text-on-surface group-hover:text-secondary block font-bold truncate">FindMy_Device_Lock.png</span>
+<span class="text-on-surface-variant text-[11px] block mt-0.5">Status: Lost Mode Aktif</span>
+</div>
+<div class="mt-2 flex items-center justify-between text-[11px] text-secondary font-semibold">
+<span class="">Lihat Fullsize</span>
+<span class="material-symbols-outlined text-[14px]">zoom_in</span>
+</div>
+</div>
+<!-- Evidence 3: Historical Personal Photo -->
+<div class="p-space-sm rounded-xl bg-surface-container-low shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between cursor-pointer group">
+<div class="relative h-16 w-full rounded-lg overflow-hidden bg-surface-container-highest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform" data-alt="Personal candid social media photo of university student coding in a campus cafe with the same sticker-decorated laptop clearly visible on the table." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiVMiexuqUFMSIj0GtRCJDErCPqz7kJ0WpWitiJRqqeu8C6mAiiOaBXZx_c-Uhumu1dfaXkR6SHFmlP_j_AqFjk9Ch0WkXFxEx_vL7N09e0PAr4MUVcejTK72IrWA2TdjhmCZJGflYR0taAEfQDBb_bmS8G9pil-nnTfW3ljVcbsUY1iNi7jNS-Qch9C8SPr3OeKh94wbdxEg0MfSuSGFiZlNGhUUH_oLDmGB_dw4">
+<span class="absolute top-1 right-1 px-1 rounded bg-primary/70 text-on-primary font-code-num text-[9px]">IG 2023</span>
+</div>
+<div class="mt-2">
+<span class="font-label-sm text-label-sm text-on-surface group-hover:text-secondary block font-bold truncate">Foto_Dokumentasi_Lama.jpg</span>
+<span class="text-on-surface-variant text-[11px] block mt-0.5">Unggahan 14 Nov 2023</span>
+</div>
+<div class="mt-2 flex items-center justify-between text-[11px] text-secondary font-semibold">
+<span class="">Lihat Fullsize</span>
+<span class="material-symbols-outlined text-[14px]">zoom_in</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Coordinator Evaluation Checklist & Auditor Notes Widget -->
+<section class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm">
+<div class="flex flex-col lg:flex-row gap-space-lg items-start">
+<!-- Checklist Section -->
+<div class="flex-1 w-full space-y-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[24px]">fact_check</span>
+<div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Checklist Evaluasi Resmi Koordinator Posko</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Pastikan semua indikator keabsahan telah diperiksa silang secara visual dan sistematis</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm" id="evalChecklist">
+<!-- Check 1 -->
+<label class="p-space-sm rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer flex items-start gap-space-sm select-none">
+<input checked="" class="w-5 h-5 rounded text-secondary focus:ring-secondary mt-0.5 cursor-pointer accent-secondary" id="checkSticker" type="checkbox">
+<div>
+<span class="font-label-md text-label-md text-on-surface block font-bold">1. Stiker Fisik Cocok</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Stiker GitHub di sudut kiri bawah terkonfirmasi identik posisi dan wujud.</span>
+</div>
+</label>
+<!-- Check 2 -->
+<label class="p-space-sm rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer flex items-start gap-space-sm select-none">
+<input checked="" class="w-5 h-5 rounded text-secondary focus:ring-secondary mt-0.5 cursor-pointer accent-secondary" id="checkWallpaper" type="checkbox">
+<div>
+<span class="font-label-md text-label-md text-on-surface block font-bold">2. Wallpaper Identik</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Layar kunci kucing toga wisuda sesuai deskripsi tanpa keraguan.</span>
+</div>
+</label>
+<!-- Check 3 -->
+<label class="p-space-sm rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer flex items-start gap-space-sm select-none">
+<input checked="" class="w-5 h-5 rounded text-secondary focus:ring-secondary mt-0.5 cursor-pointer accent-secondary" id="checkProof" type="checkbox">
+<div>
+<span class="font-label-md text-label-md text-on-surface block font-bold">3. Bukti Invoice/iCloud Valid</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Serial number inv-iBox cocok 100% dengan serial laser chasis posko.</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Auditor Internal Note Section -->
+<div class="w-full lg:w-96 space-y-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface font-bold flex items-center gap-1" for="auditorNotes">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">edit_note</span>
+              Catatan Auditor / Posko Penyerahan
+            </label>
+<span class="text-on-surface-variant font-code-num text-xs">Otomatis Masuk Berita Acara</span>
+</div>
+<textarea class="w-full p-space-sm rounded-xl bg-surface-container-low text-on-surface font-body-sm text-body-sm focus:outline-none focus:bg-surface-container transition-colors resize-none placeholder:text-on-surface-variant/60" id="auditorNotes" placeholder="Tuliskan catatan khusus untuk petugas serah terima posko (misal: mintakan mahasiswa membuka passcode layar di hadapan satpam)..." rows="3">Semua 3 poin identifikasi ciri rahasia terverifikasi valid tanpa sanggahan. Mahasiswa diwajibkan membawa KTM asli fisik saat pengambilan di Locker 12.</textarea>
+</div>
+</div>
+</section>
+</div>
+<!-- Sticky Bottom Global Action Toolbar -->
+<aside class="sticky bottom-0 z-30 w-full px-margin py-space-sm bg-surface-container-lowest/95 backdrop-blur-md shadow-xl">
+<div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-space-sm">
+<!-- Left Meta Summary -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary animate-pulse"></div>
+<span class="font-label-md text-label-md text-on-surface font-bold">Status: Siap Eksekusi Keputusan</span>
+</div>
+<span class="hidden md:inline text-on-surface-variant font-body-sm text-body-sm">
+          Koordinator Bertugas: <strong class="text-on-surface">Drs. H. Sudirman, M.Si</strong>
+</span>
+</div>
+<!-- Action Button Group -->
+<div class="flex flex-wrap items-center gap-space-sm w-full sm:w-auto justify-end">
+<!-- Reject Button (Danger) -->
+<button class="px-space-md py-2.5 rounded-xl bg-surface-container-high text-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md font-bold transition-colors flex items-center gap-1.5 shadow-sm" id="btnReject" onclick="handleRejectAction()" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span class="">Tolak Klaim</span>
+</button>
+<!-- Request More Proof Button (Warning/Alternative) -->
+<button class="px-space-md py-2.5 rounded-xl bg-surface-container-high text-on-surface hover:bg-surface-container-highest font-label-md text-label-md font-bold transition-colors flex items-center gap-1.5 shadow-sm" id="btnNeedProof" onclick="handleNeedProofAction()" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">mark_chat_unread</span>
+<span class="">Minta Bukti Tambahan</span>
+</button>
+<!-- Approve Button (Primary Success) -->
+<button class="px-space-lg py-2.5 rounded-xl bg-primary text-on-primary hover:bg-primary-container font-label-md text-label-md font-bold transition-colors flex items-center gap-2 shadow-md hover:shadow-lg" id="btnApprove" onclick="handleApproveAction()" type="button">
+<span class="material-symbols-outlined text-[20px] text-tertiary-fixed">verified</span>
+<span class="">Setujui Klaim &amp; Terbitkan Tiket Posko</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Interactive Feedback Overlay Modal (Vanilla JS Driven) -->
+<div class="fixed inset-0 z-50 bg-primary/40 backdrop-blur-sm hidden items-center justify-center p-space-md" id="actionModal">
+<div class="bg-surface-container-lowest max-w-lg w-full rounded-xl shadow-xl p-space-lg space-y-space-md animate-in fade-in zoom-in-95 duration-200">
+<div class="flex items-center gap-space-sm" id="modalHeader">
+<div class="w-10 h-10 rounded-full flex items-center justify-center" id="modalIconBox">
+<span class="material-symbols-outlined text-[24px]" id="modalIcon">task_alt</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface" id="modalTitle">Konfirmasi Tindakan</h4>
+<span class="font-body-sm text-body-sm text-on-surface-variant" id="modalSubtitle">Kasus #CLM-9032 (MacBook Air M2)</span>
+</div>
+</div>
+<div class="p-space-sm rounded-xl bg-surface-container-low font-body-sm text-body-sm text-on-surface" id="modalBodyText">
+        Tiket pengambilan posko #TKT-8819 akan langsung dikirimkan ke WhatsApp &amp; SSO Mahasiswa (Ahmad Zaki). Petugas Locker #12 akan menerima notifikasi otorisasi penyerahan barang.
+      </div>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-2 rounded-xl bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" onclick="closeModal()" type="button">
+          Batal
+        </button>
+<button class="px-space-md py-2 rounded-xl bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors" id="modalConfirmBtn" onclick="confirmModalAction()" type="button">
+          Konfirmasi &amp; Proses
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  let currentAction = 'approve';
+
+  function openModal(action, title, body, icon, iconColor, bgBoxColor) {
+    currentAction = action;
+    const modal = document.getElementById('actionModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBodyText = document.getElementById('modalBodyText');
+    const modalIcon = document.getElementById('modalIcon');
+    const modalIconBox = document.getElementById('modalIconBox');
+
+    modalTitle.textContent = title;
+    modalBodyText.textContent = body;
+    modalIcon.textContent = icon;
+    modalIcon.className = `material-symbols-outlined text-[24px] ${iconColor}`;
+    modalIconBox.className = `w-10 h-10 rounded-full flex items-center justify-center ${bgBoxColor}`;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('actionModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function handleApproveAction() {
+    openModal(
+      'approve',
+      'Setujui Klaim & Terbitkan Tiket',
+      'Tiket pengambilan posko #TKT-8819 akan langsung diterbitkan secara resmi. Notifikasi kode QR pengambilan akan otomatis dikirimkan ke WhatsApp mahasiswa (+628124491XXXX) dan email kampus.',
+      'verified',
+      'text-tertiary-fixed-dim',
+      'bg-tertiary-container'
+    );
+  }
+
+  function handleRejectAction() {
+    openModal(
+      'reject',
+      'Tolak Pengajuan Klaim',
+      'Pengajuan klaim ini akan ditandai TIDAK VALID. Alasan penolakan (misal ciri fisik tidak bersesuaian) akan dikirimkan ke mahasiswa dan barang tetap tersimpan di Locker 12.',
+      'cancel',
+      'text-error',
+      'bg-error-container'
+    );
+  }
+
+  function handleNeedProofAction() {
+    openModal(
+      'need_proof',
+      'Minta Dokumen/Bukti Tambahan',
+      'Sistem akan mengirimkan permintaan unggah dokumen tambahan via notifikasi SSO & WhatsApp (contoh: bukti dus kotak asli atau bukti login Apple ID di hadapan petugas). Batas waktu respons: 24 Jam.',
+      'mark_chat_unread',
+      'text-secondary',
+      'bg-surface-container-highest'
+    );
+  }
+
+  function confirmModalAction() {
+    const modalBodyText = document.getElementById('modalBodyText');
+    modalBodyText.innerHTML = '<div class="flex items-center gap-2 text-on-surface font-semibold py-2"><span class="material-symbols-outlined animate-spin text-secondary">progress_activity</span> Memproses Berita Acara &amp; Menyiapkan Notifikasi...</div>';
+    
+    setTimeout(() => {
+      closeModal();
+      const statusPill = document.querySelector('aside div span.text-on-surface');
+      if (currentAction === 'approve') {
+        alert('Sukses! Tiket Pengambilan #TKT-8819 berhasil diterbitkan. Data telah tersinkronisasi ke Posko Rektorat.');
+      } else if (currentAction === 'reject') {
+        alert('Klaim #CLM-9032 telah ditolak. Status barang dikembalikan ke Antrean Terbuka.');
+      } else {
+        alert('Permintaan bukti telah dikirimkan ke Mahasiswa (Ahmad Zaki). SLA ditangguhkan sementara.');
+      }
+    }, 900);
+  }
+</script></main></div>
+
+
+
+</body></html>

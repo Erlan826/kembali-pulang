@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="kpGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="kpAccent" x1="16" y1="12" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#kpGrad)" />
+  <!-- Shield outline subtle -->
+  <path d="M24 8L36 13V22C36 29.5 30.8 36.3 24 38C17.2 36.3 12 29.5 12 22V13L24 8Z" stroke="white" stroke-opacity="0.25" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Return loop arrow indicating safe return / recovery -->
+  <path d="M24 16C19.58 16 16 19.58 16 24C16 28.42 19.58 32 24 32C27.5 32 30.45 29.74 31.52 26.5" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  <!-- Arrow head returning -->
+  <path d="M22 13L25.5 16.5L22 20" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Sparkle / beacon in center -->
+  <circle cx="24" cy="24" r="3.5" fill="url(#kpAccent)" />
+</svg>

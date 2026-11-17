@@ -1,0 +1,6 @@
+{
+  "name": "Kembali Pulang - Layanan Temuan Kampus",
+  "description": "Sistem Penataan, Pelaporan, Verifikasi dan Pengambilan Barang Hilang Terintegrasi Universitas berbasis SSO.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
